@@ -1,0 +1,8 @@
+
+* Install Python 2.7 and numpy
+
+* Install custom RBDL fork from https://orb.iwr.uni-heidelberg.de/code/martin/rbdl_new_ik
+
+  If you are on Arch Linux, install the lua51 package and be sure to specify the
+      -DLUA_INCLUDE_DIR=/usr/include/lua5.1
+  option to cmake
