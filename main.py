@@ -10,5 +10,6 @@ plot_trajectories(
     trajectories=[traj_com_pos, traj_foot_l_pos, traj_foot_r_pos],
     labels=['CoM', 'Left foot', 'Right foot'],
     filename='out/trajectories.png',
+    rotations=[traj_com_ort, traj_foot_l_ort, traj_foot_r_ort],
     show=True
 )
