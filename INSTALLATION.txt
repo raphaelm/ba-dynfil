@@ -1,8 +1,13 @@
 
-* Install Python 2.7 and numpy
+* Install Python 2.7, virtualenv and pip
+
+* Install numpy and Cython
 
 * Install custom RBDL fork from https://orb.iwr.uni-heidelberg.de/code/martin/rbdl_new_ik
+  Replace python/ directory with current code from the official RBDL repo
 
   If you are on Arch Linux, install the lua51 package and be sure to specify the
       -DLUA_INCLUDE_DIR=/usr/include/lua5.1
-  option to cmake
+  option to cmake.
+
+  Then run "python setup.py install" inside build/python/
