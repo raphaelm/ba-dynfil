@@ -110,7 +110,7 @@ if __name__ == "__main__":
     # load lua model
     # filename = "./python/leo_dl.lua"
     # filename = "./python/iCubHeidelberg01.lua"
-    filename = "./iCubHeidelberg01_no_weights.urdf";
+    filename = "./data/models/iCubHeidelberg01_no_weights.urdf";
 
     # NOTE loadModel loads lua and urdf models
     print "loading model: ", filename

@@ -27,6 +27,7 @@ def plot_trajectories(trajectories, labels, filename, rotations=None, show=False
     for traj, label in zip(trajectories, labels):
         ax.plot(traj[:,0], traj[:,1], traj[:,2], label=label)
 
+    """
     if rotations:
         rotsteps = 15
         for traj, rots in zip(trajectories, rotations):
@@ -39,6 +40,7 @@ def plot_trajectories(trajectories, labels, filename, rotations=None, show=False
                       length=0.05, pivot='tail', color='green')
             ax.quiver(traj[::rotsteps,0], traj[::rotsteps,1], traj[::rotsteps,2], uz[:,0], uz[:,1], uz[:,2],
                       length=0.05, pivot='tail', color='blue')
+    """
 
     ax.legend()
     fig.savefig(filename)
