@@ -40,7 +40,22 @@ def plot_trajectories(trajectories, labels, filename, rotations=None, show=False
     """
 
     ax.legend()
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
     fig.savefig(filename)
     if show:
         plt.show()
 
+
+def plot_trajectories_from_top(trajectories, labels, filename, rotations=None, show=False):
+    fig = plt.figure()
+    ax = fig.gca()
+    for traj, label in zip(trajectories, labels):
+        ax.plot(traj[:,0], traj[:,1], label=label)
+    ax.legend()
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    fig.savefig(filename)
+    if show:
+        plt.show()
