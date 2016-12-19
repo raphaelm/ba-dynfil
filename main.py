@@ -1,7 +1,7 @@
 import numpy as np
 import rbdl
 
-from dynfil import constants, zmp
+from dynfil import constants, zmp, kinematics
 from dynfil.bodies import BodyTrajectory
 from dynfil.utils.plot import plot_trajectories, PlotTrajectory
 
@@ -22,7 +22,9 @@ rsole = BodyTrajectory(model, model.GetBodyId("r_sole"))
 rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
 
 zmp_ref = pgdata[:, 19:22]
-zmp_calc = zmp.calculate_zmp_trajectory(model, q_ini, chest, lsole, rsole, times=pgdata[:, 0])
+
+q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
+zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, times=pgdata[:, 0])
 
 plot_trajectories(
     trajectories=[
@@ -35,3 +37,4 @@ plot_trajectories(
     filename='out/trajectories.png',
     show=True
 )
+
