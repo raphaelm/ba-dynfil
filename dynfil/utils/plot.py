@@ -1,6 +1,8 @@
 # This unused import is important and needs to be executed before the matplotlib import
 # Otherwise the 3D projection is not available
 # noinspection PyUnresolvedReferences
+from collections import namedtuple
+
 from mpl_toolkits.mplot3d import Axes3D
 import matplotlib as mpl
 import numpy as np
@@ -15,31 +17,42 @@ def rotate_vector(vec, matarr):
     return res
 
 
-def plot_trajectories(trajectories, labels, filename, rotations=None, show=False):
+PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color')
+
+
+def plot_trajectories(trajectories, filename, show=False):
     mpl.rcParams['legend.fontsize'] = 10
 
     fig = plt.figure()
     ax = fig.gca(projection='3d')
 
-    for traj, label in zip(trajectories, labels):
-        ax.plot(traj[:,0], traj[:,1], traj[:,2], label=label)
+    for traj in trajectories:
+        ax.plot(traj.positions[:,0], traj.positions[:,1], traj.positions[:,2], label=traj.label, color=traj.color)
 
     """
     if rotations:
         rotsteps = 30
-        for traj, rots in zip(trajectories, rotations):
-            ux = rotate_vector(np.array([1, 0, 0]), rots[::rotsteps])
-            uy = rotate_vector(np.array([0, 1, 0]), rots[::rotsteps])
-            uz = rotate_vector(np.array([0, 0, 1]), rots[::rotsteps])
-            ax.quiver(traj[::rotsteps,0], traj[::rotsteps,1], traj[::rotsteps,2], ux[:,0], ux[:,1], ux[:,2],
+        for traj in trajectories:
+            if not traj.rotations:
+                continue
+            ux = rotate_vector(np.array([1, 0, 0]), traj.rotations[::rotsteps])
+            uy = rotate_vector(np.array([0, 1, 0]), traj.rotations[::rotsteps])
+            uz = rotate_vector(np.array([0, 0, 1]), traj.rotations[::rotsteps])
+            ax.quiver(traj.positions[::rotsteps,0], traj.positions[::rotsteps,1], traj.positions[::rotsteps,2],
+                      ux[:,0], ux[:,1], ux[:,2],
                       length=0.05, pivot='tail', color='red')
-            ax.quiver(traj[::rotsteps,0], traj[::rotsteps,1], traj[::rotsteps,2], uy[:,0], uy[:,1], uy[:,2],
+            ax.quiver(traj.positions[::rotsteps,0], traj.positions[::rotsteps,1], traj.positions[::rotsteps,2],
+                      uy[:,0], uy[:,1], uy[:,2],
                       length=0.05, pivot='tail', color='green')
-            ax.quiver(traj[::rotsteps,0], traj[::rotsteps,1], traj[::rotsteps,2], uz[:,0], uz[:,1], uz[:,2],
+            ax.quiver(traj.positions[::rotsteps,0], traj.positions[::rotsteps,1], traj.positions[::rotsteps,2],
+                      uz[:,0], uz[:,1], uz[:,2],
                       length=0.05, pivot='tail', color='blue')
     """
 
-    ax.legend()
+    leg = ax.legend()
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(5.0)
+
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
@@ -48,12 +61,14 @@ def plot_trajectories(trajectories, labels, filename, rotations=None, show=False
         plt.show()
 
 
-def plot_trajectories_from_top(trajectories, labels, filename, rotations=None, show=False):
+def plot_trajectories_from_top(trajectories, filename, show=False):
     fig = plt.figure()
     ax = fig.gca()
-    for traj, label in zip(trajectories, labels):
-        ax.plot(traj[:,0], traj[:,1], label=label)
-    ax.legend()
+    for traj in trajectories:
+        ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label)
+    leg = ax.legend()
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(5.0)
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     fig.savefig(filename)
