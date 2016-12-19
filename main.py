@@ -4,6 +4,7 @@ import rbdl
 from dynfil import constants, zmp, kinematics
 from dynfil.bodies import BodyTrajectory
 from dynfil.utils.plot import plot_trajectories, PlotTrajectory
+from dynfil.utils.meshup import save_to_meshup
 
 model = rbdl.loadModel('data/models/iCubHeidelberg01_no_weights.urdf')
 
@@ -11,6 +12,7 @@ model = rbdl.loadModel('data/models/iCubHeidelberg01_no_weights.urdf')
 q_ini = constants.POSE_HALF_SITTING
 
 pgdata = np.genfromtxt('data/traj/alpha0015beta02/PatternGeneratorData.csv', delimiter=',', dtype=None)
+timesteps = pgdata[:, 0]
 
 chest = BodyTrajectory(model, model.GetBodyId("chest"))
 chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7])
@@ -24,7 +26,9 @@ rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
 zmp_ref = pgdata[:, 19:22]
 
 q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
-zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, times=pgdata[:, 0])
+zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, times=timesteps)
+
+save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 
 plot_trajectories(
     trajectories=[
@@ -37,4 +41,3 @@ plot_trajectories(
     filename='out/trajectories.png',
     show=True
 )
-
