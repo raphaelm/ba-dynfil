@@ -62,4 +62,4 @@ def euler_from_matrix(rotmat, order):
     else:
         raise NotImplementedError("Unimplemented rotation order {}".format(order))
 
-    return None
+    return angles

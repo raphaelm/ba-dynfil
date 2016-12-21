@@ -1,6 +1,7 @@
 import numpy as np
+import rbdl
 
-from .utils.angles import matrix_from_euler_xyz
+from .utils.angles import matrix_from_euler_xyz, euler_from_matrix
 
 
 class BodyTrajectory(object):
@@ -19,6 +20,13 @@ class BodyTrajectory(object):
         if len(traj_pos) != len(traj_angles):
             raise ValueError("Position and angle trajectories need to be of same length.")
         self.traj_pos = traj_pos
+
+        zero_angles = euler_from_matrix(
+            rbdl.CalcBodyWorldOrientation(self.model, np.zeros(self.model.dof_count), self.id),
+            "123"
+        )
+        traj_angles = zero_angles + np.deg2rad(traj_angles)
+
         self.traj_ort = np.array([matrix_from_euler_xyz(a, "123") for a in traj_angles])
 
     def to_constraint(self, time_index):
