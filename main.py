@@ -14,8 +14,9 @@ q_ini = constants.POSE_HALF_SITTING
 pgdata = np.genfromtxt('data/traj/alpha0015beta02/PatternGeneratorData.csv', delimiter=',', dtype=None)
 timesteps = pgdata[:, 0]
 
+offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
 chest = BodyTrajectory(model, model.GetBodyId("chest"))
-chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7])
+chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7], offset_angles)
 
 lsole = BodyTrajectory(model, model.GetBodyId("l_sole"))
 lsole.set_trajectories(pgdata[:, 7:10], pgdata[:, 10:13])
@@ -24,6 +25,8 @@ rsole = BodyTrajectory(model, model.GetBodyId("r_sole"))
 rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
 
 zmp_ref = pgdata[:, 19:22]
+
+# com = kinematics.get_com(model, q_ini, chest[:1], lsole[:1], rsole[:1])
 
 q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
 zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, times=timesteps)

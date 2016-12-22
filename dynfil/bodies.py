@@ -16,16 +16,17 @@ class BodyTrajectory(object):
         self.traj_pos = np.array([])
         self.traj_ort = np.array([])
 
-    def set_trajectories(self, traj_pos, traj_angles):
+    def set_trajectories(self, traj_pos, traj_angles, offset_angles=np.zeros(3)):
         if len(traj_pos) != len(traj_angles):
             raise ValueError("Position and angle trajectories need to be of same length.")
         self.traj_pos = traj_pos
 
-        zero_angles = euler_from_matrix(
-            rbdl.CalcBodyWorldOrientation(self.model, np.zeros(self.model.dof_count), self.id),
-            "123"
-        )
-        traj_angles = zero_angles + np.deg2rad(traj_angles)
+        # zero_angles = euler_from_matrix(
+        #     rbdl.CalcBodyWorldOrientation(self.model, np.zeros(self.model.dof_count), self.id),
+        #     "123"
+        # )
+        # traj_angles = zero_angles + np.deg2rad(traj_angles)
+        traj_angles = offset_angles + np.deg2rad(traj_angles)
 
         self.traj_ort = np.array([matrix_from_euler_xyz(a, "123") for a in traj_angles])
 
