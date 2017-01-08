@@ -4,7 +4,9 @@ import rbdl
 
 def get_com(model, q_ini, chest, lsole, rsole, trials=10):
     """Iterative determination of CoM using inverse kinematics."""
-    Center_of_Mass = CS.AddFullConstraint(model.GetBodyId("chest"), body_points[2], com_pos, c_ort);
+    cs = rbdl.InverseKinematicsConstraintSet()
+    cs.lmbda = 1e-4
+    com = cs.AddFullConstraint(model.GetBodyId("chest"), body_points[2], com_pos, c_ort);
     for i in range(trials):
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.lmbda = 1e-4
@@ -35,9 +37,9 @@ def inverse(model, q_ini, chest, lsole, rsole):
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.lmbda = 1e-4
 
-        com = get_com(model, q_ini, chest[:1], lsole[:1], rsole[:1])
+        #com = get_com(model, q_ini, chest, lsole, rsole)
         # cs_chest = chest.to_constraint(t)
-        chest.body_point = com
+        #chest.body_point = com
         cs.AddFullConstraint(*chest.to_constraint(t))
         cs.AddFullConstraint(*lsole.to_constraint(t))
         cs.AddFullConstraint(*rsole.to_constraint(t))

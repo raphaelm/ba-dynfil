@@ -35,3 +35,10 @@ class BodyTrajectory(object):
 
     def __len__(self):
         return len(self.traj_pos)
+
+    def copy(self):
+        n = BodyTrajectory(self.model, self.id)
+        n.body_point = np.copy(self.body_point)
+        n.traj_pos = np.copy(self.traj_pos)
+        n.traj_ort = np.copy(self.traj_ort)
+        return n
