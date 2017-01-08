@@ -2,11 +2,10 @@ import numpy as np
 import rbdl
 
 
-def get_com(model, q_ini, chest, lsole, rsole, trials=10):
-    """Iterative determination of CoM using inverse kinematics."""
-    cs = rbdl.InverseKinematicsConstraintSet()
-    cs.lmbda = 1e-4
-    com = cs.AddFullConstraint(model.GetBodyId("chest"), body_points[2], com_pos, c_ort);
+def move_chest_body_to_com(model, q_ini, chest, lsole, rsole, trials=10):
+    """
+    Iterative determination of CoM using inverse kinematics.
+    """
     for i in range(trials):
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.lmbda = 1e-4
@@ -14,14 +13,12 @@ def get_com(model, q_ini, chest, lsole, rsole, trials=10):
         cs.AddFullConstraint(*lsole.to_constraint(0))
         cs.AddFullConstraint(*rsole.to_constraint(0))
         q_res = rbdl.InverseKinematics(model, q_ini, cs)
-        q_ini[:] = q_res;
+        q_ini = q_res
 
         com_tmp = np.zeros(3)
         rbdl.CalcCenterOfMass(model, q_ini, np.zeros(model.dof_count), com_tmp)
-        # rbdl.CalcBaseToBodyCoordinates(com)
-
-        com_real = com_temp;
-        # desired_pose[i].body_points[Center_of_Mass] = CalcBaseToBodyCoordinates(model,qinit,model.GetBodyId("chest"),com_real);
+        com_real = rbdl.CalcBaseToBodyCoordinates(model, q_ini, chest.id, com_tmp)
+        chest.body_point = com_real
 
 
 def inverse(model, q_ini, chest, lsole, rsole):
@@ -37,9 +34,8 @@ def inverse(model, q_ini, chest, lsole, rsole):
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.lmbda = 1e-4
 
-        #com = get_com(model, q_ini, chest, lsole, rsole)
-        # cs_chest = chest.to_constraint(t)
-        #chest.body_point = com
+        move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
+
         cs.AddFullConstraint(*chest.to_constraint(t))
         cs.AddFullConstraint(*lsole.to_constraint(t))
         cs.AddFullConstraint(*rsole.to_constraint(t))
