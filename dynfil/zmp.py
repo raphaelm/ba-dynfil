@@ -2,7 +2,7 @@ import numpy as np
 import rbdl
 
 
-def calculate_zmp_trajectory(model, q, times):
+def calculate_zmp_trajectory(model, q, chest, times):
     """
     Calculate the ZMP trajectory. Corresponds to the CalculateZMP()
     algorithm in the thesis.
@@ -31,7 +31,17 @@ def calculate_zmp_trajectory(model, q, times):
 
         F_ext = tau[0:3]
         M_ext = tau[3:6]
-        zmp[t] = 1 / (F_ext[2]) * np.array([-M_ext[1], M_ext[0], 0])
+
+        # Calculate ZMP relative to CoM
+        _zmp = 1 / (F_ext[2]) * np.array([-M_ext[1], M_ext[0], 0])
+
+        # Calculate CoM position and transform to ZMP world coordinate
+        chest_pos = rbdl.CalcBodyToBaseCoordinates (
+            model, q[t], chest.id, chest.body_point
+        )
+        _zmp += chest_pos
+        _zmp[2] = 0
+        zmp[t] = _zmp
 
         prev_qdot = qdot
 

@@ -29,7 +29,7 @@ zmp_ref = pgdata[:, 19:22]
 # com = kinematics.get_com(model, q_ini, chest[:1], lsole[:1], rsole[:1])
 
 q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
-zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, times=timesteps)
+zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, chest, times=timesteps)
 
 save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 
