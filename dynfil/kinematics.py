@@ -4,7 +4,12 @@ import rbdl
 
 def move_chest_body_to_com(model, q_ini, chest, lsole, rsole, trials=10):
     """
-    Iterative determination of CoM using inverse kinematics.
+    Move the body_point of our chest body. This is an approach to compensate
+    for the fact that the real Center of Mass is *not* equal to the free-flyer
+    while we treat it as such in most of our calculations.
+
+    In this method, we iteratively calculate the *actual* CoM and then move the
+    free-flyer's position there.
     """
     for i in range(trials):
         cs = rbdl.InverseKinematicsConstraintSet()
