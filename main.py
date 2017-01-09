@@ -33,12 +33,12 @@ zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, chest, times=timesteps)
 
 save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 
-"""
 c_filtered = filter.dynfil_newton_numerical(
     chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
-    model=model, times=timesteps, iterations=5
+    model=model, times=timesteps, iterations=2
 )
 
+"""
 chest.set_trajectories(c_filtered[:, 1:4], pgdata[:, 4:7], offset_angles)
 q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
 zmp_filtered = zmp.calculate_zmp_trajectory(model, q_calc, chest, times=timesteps)
@@ -51,7 +51,7 @@ plot_trajectories(
         PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
         PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
-        #PlotTrajectory(positions=c_filtered, rotations=None, label='Dynfil: CoM', color='b'),
+        PlotTrajectory(positions=c_filtered, rotations=None, label='Dynfil: CoM', color='b'),
         #PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories.png',

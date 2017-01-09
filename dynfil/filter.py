@@ -10,10 +10,13 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times):
     h = 1e-10
 
     # Allocate an array of jacobians (one for each timestep)
-    jacobians = np.zeros((len(times), 3, 3))
+    jacobians = np.zeros((len(times), 2, 2))
 
-    # Calculate finite differences for all three dimensions
-    for dim in range(3):
+    # We only do this in 2D here
+    zmp_ini = zmp_ini[:, 0:2]
+
+    # Calculate finite differences for both dimensions
+    for dim in range(2):
         h_vec = np.zeros_like(chest.traj_pos)
         h_vec[:, dim] = h
 
@@ -22,7 +25,7 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times):
 
         q_calc = kinematics.inverse(model, q_ini, chest_modified, lsole, rsole)
         zmp_calc_second = zmp.calculate_zmp_trajectory(model, q_calc, chest_modified,
-                                                       times=times)
+                                                       times=times)[:, 0:2]
 
         jacobians[:, :, dim] = (zmp_calc_second - zmp_ini) / h
 
@@ -47,6 +50,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
         for t in range(len(chest)):  # Iterate over timesteps
             # One Newton iteration:
-            chest.traj_pos[t] -= np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t])
+            diffxy = np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t, 0:2])
+            chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
     return chest.traj_pos
