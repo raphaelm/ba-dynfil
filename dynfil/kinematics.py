@@ -48,3 +48,27 @@ def inverse(model, q_ini, chest, lsole, rsole):
         q[t] = rbdl.InverseKinematics(model, q[t - 1] if t > 0 else q_ini, cs)
 
     return q
+
+
+def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times):
+    """
+    Like inverse(), but returns a tuple of (q, qdot, qddot)
+    """
+    q = inverse(model, q_ini, chest, lsole, rsole)
+
+    qdot = np.zeros((len(q), model.qdot_size))
+    qddot = np.zeros((len(q), model.qdot_size))
+
+    for t in range(len(q)):  # Iterate over timesteps
+        # Calculate qdot and qddot using finite differences
+        if t > 0 and times[t] > times[t - 1]:
+            qdot[t] = (q[t] - q[t - 1]) / (times[t] - times[t - 1])
+        else:
+            qdot[t] = np.zeros(model.qdot_size)
+
+        if t > 1 and times[t] > times[t - 1]:
+            qddot[t] = (qdot[t] - qdot[t - 1]) / (times[t] - times[t - 1])
+        else:
+            qddot[t] = np.zeros(model.qdot_size)
+
+    return q, qdot, qddot

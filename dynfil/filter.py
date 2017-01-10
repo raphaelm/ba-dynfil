@@ -23,9 +23,12 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times):
         chest_modified = chest.copy()
         chest_modified.traj_pos += h_vec
 
-        q_calc = kinematics.inverse(model, q_ini, chest_modified, lsole, rsole)
-        zmp_calc_second = zmp.calculate_zmp_trajectory(model, q_calc, chest_modified,
-                                                       times=times)[:, 0:2]
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest_modified, lsole, rsole, times
+        )
+        zmp_calc_second = zmp.calculate_zmp_trajectory(
+            model, q_calc, qdot_calc, qddot_calc, chest_modified
+        )[:, 0:2]
 
         jacobians[:, :, dim] = (zmp_calc_second - zmp_ini) / h
 
@@ -41,8 +44,12 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
     for i in range(iterations):
 
-        q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
-        zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, chest, times=times)
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, times
+        )
+        zmp_calc = zmp.calculate_zmp_trajectory(
+            model, q_calc, qdot_calc, qddot_calc, chest
+        )
         zmp_diff = zmp_calc - zmp_ref
 
         # Calculate jacobians

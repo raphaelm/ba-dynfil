@@ -11,6 +11,7 @@ model = rbdl.loadModel('data/models/iCubHeidelberg01_no_weights.urdf')
 # initial pose: half-sitting
 q_ini = constants.POSE_HALF_SITTING
 
+# Load data from file
 pgdata = np.genfromtxt('data/traj/alpha0015beta02/PatternGeneratorData.csv', delimiter=',', dtype=None)
 timesteps = pgdata[:, 0]
 
@@ -26,23 +27,29 @@ rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
 
 zmp_ref = pgdata[:, 19:22]
 
-# com = kinematics.get_com(model, q_ini, chest[:1], lsole[:1], rsole[:1])
+# First ZMP calculation
+q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+    model, q_ini, chest, lsole, rsole, timesteps
+)
+zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
-q_calc = kinematics.inverse(model, q_ini, chest, lsole, rsole)
-zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, chest, times=timesteps)
-
-save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
-
+# Apply dynamic filter
 chest_filtered = filter.dynfil_newton_numerical(
     chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
-    model=model, times=timesteps, iterations=2
+    model=model, times=timesteps, iterations=1
 )
 
-q_filtered = kinematics.inverse(model, q_ini, chest_filtered, lsole, rsole)
-zmp_filtered = zmp.calculate_zmp_trajectory(model, q_calc, chest_filtered, times=timesteps)
+# Calculate ZMP from filtered result
+q_filtered, qdot_filtered, qddot_filtered = kinematics.inverse_with_derivatives(
+    model, q_ini, chest_filtered, lsole, rsole, timesteps
+)
+zmp_filtered = zmp.calculate_zmp_trajectory(model, q_filtered, qdot_filtered, qddot_filtered, chest_filtered)
 
+# Save meshup files
+save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 save_to_meshup('out/inverse_after_filter.csv', timesteps, q_filtered)
 
+# Generate plots
 plot_trajectories(
     trajectories=[
         PlotTrajectory(positions=chest.traj_pos, rotations=chest.traj_ort, label='PG: CoM', color='y'),
@@ -50,7 +57,7 @@ plot_trajectories(
         PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
         PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
-        PlotTrajectory(positions=chest_filtered.traj_ort, rotations=None, label='Dynfil: CoM', color='b'),
+        PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
         PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories.png',

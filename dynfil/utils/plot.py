@@ -74,3 +74,20 @@ def plot_trajectories_from_top(trajectories, filename, show=False):
     fig.savefig(filename)
     if show:
         plt.show()
+
+
+def plot_q_values():
+
+    fig = plt.figure()
+    ax = fig.gca()
+
+    for i in range(len(q_calc[0,:])):
+        ax.plot(timesteps, qdot_calc[:,i], label='qdot_{}'.format(i), marker='.')
+
+    leg = ax.legend()
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(5.0)
+
+    ax.set_xlabel('t')
+    ax.set_ylabel('value')
+    plt.show()
