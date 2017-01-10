@@ -15,3 +15,5 @@ POSE_HALF_SITTING = np.array([
     -0.25, 0,  # torso x, -z
     0  # chest -y
 ])
+FOOT_LENGTH = 0.2172 - 0.04  # -2cm safety margin on each side
+FOOT_WIDTH = 0.1380 - 0.04  # -2cm safety margin on each side

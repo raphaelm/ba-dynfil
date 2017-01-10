@@ -1,5 +1,6 @@
 import numpy as np
 import rbdl
+import sys
 
 from dynfil import constants, zmp, kinematics, filter
 from dynfil.bodies import BodyTrajectory
@@ -54,10 +55,11 @@ save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 save_to_meshup('out/inverse_after_filter.csv', timesteps, q_filtered)
 
 # Generate plots
+show_plots = '--show' in sys.argv
 plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc, name='qdot',
-                          limit=5, filename='out/test_interpol.png', show=True)
+                          limit=5, filename='out/test_interpol.png', show=show_plots)
 plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, name='qddot',
-                          limit=5, filename='out/test_interpol.png', show=True)
+                          limit=5, filename='out/test_interpol.png', show=show_plots)
 plot.plot_q_values(
     timesteps,
     (q_calc, q_filtered),
@@ -65,7 +67,7 @@ plot.plot_q_values(
     (qddot_calc, qddot_filtered),
     limit=5,
     filename='out/q_calc.png',
-    show=True,
+    show=show_plots,
 )
 
 plot.plot_trajectories(
@@ -73,6 +75,8 @@ plot.plot_trajectories(
         plot.PlotTrajectory(positions=chest.traj_pos, rotations=chest.traj_ort, label='PG: CoM', color='y'),
         plot.PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
         plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
+        plot.FootTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, color='r'),
+        plot.FootTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, color='g'),
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
         plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
@@ -80,19 +84,21 @@ plot.plot_trajectories(
         #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories.png',
-    show=True
+    show=show_plots
 )
 
 plot.plot_trajectories_from_top(
     trajectories=[
         plot.PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
         plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
+        plot.FootTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, color='r'),
+        plot.FootTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, color='g'),
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
         #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories_on_ground.png',
-    show=True
+    show=show_plots
 )
 
 plot.plot_trajectories_from_top(
@@ -102,5 +108,5 @@ plot.plot_trajectories_from_top(
         #plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
     ],
     filename='out/trajectories_waist.png',
-    show=True
+    show=show_plots
 )

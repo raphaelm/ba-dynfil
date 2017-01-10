@@ -4,9 +4,13 @@
 from collections import namedtuple
 
 from mpl_toolkits.mplot3d import Axes3D
+import mpl_toolkits.mplot3d.art3d as art3d
 import matplotlib as mpl
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import patches
+
+from .. import constants
 
 
 def rotate_vector(vec, matarr):
@@ -18,7 +22,7 @@ def rotate_vector(vec, matarr):
 
 
 PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color')
-FootTrajectory = namedtuple('FootTrajectory', 'positions rotations')
+FootTrajectory = namedtuple('FootTrajectory', 'positions rotations color')
 
 
 def plot_trajectories(trajectories, filename=None, show=False):
@@ -28,7 +32,26 @@ def plot_trajectories(trajectories, filename=None, show=False):
     ax = fig.gca(projection='3d')
 
     for traj in trajectories:
-        ax.plot(traj.positions[:,0], traj.positions[:,1], traj.positions[:,2], label=traj.label, color=traj.color)
+        if isinstance(traj, PlotTrajectory):
+            ax.plot(traj.positions[:,0], traj.positions[:,1], traj.positions[:,2], label=traj.label, color=traj.color)
+        elif isinstance(traj, FootTrajectory):
+            hatch_alt = True
+            for t in range(1, len(traj.positions)):
+                if traj.positions[t][2] < 1e-13 and traj.positions[t-1][2] > 1e-13:
+                    # First timestep with this foot on the ground, draw foot.
+                    # TODO: Rotate foot
+                    p = patches.Rectangle(
+                        (
+                            traj.positions[t][0] - constants.FOOT_LENGTH / 2.0,
+                            traj.positions[t][1] - constants.FOOT_WIDTH / 2.0,
+                        ),
+                        constants.FOOT_LENGTH, constants.FOOT_WIDTH,
+                        fill=False, hatch='\\' if hatch_alt else '/',
+                        color=traj.color
+                    )
+                    ax.add_patch(p)
+                    art3d.pathpatch_2d_to_3d(p, z=0, zdir="z")
+                    hatch_alt = not hatch_alt
 
     """
     if rotations:
@@ -67,7 +90,27 @@ def plot_trajectories_from_top(trajectories, filename=None, show=False):
     fig = plt.figure()
     ax = fig.gca()
     for traj in trajectories:
-        ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label)
+        if isinstance(traj, PlotTrajectory):
+            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label)
+        elif isinstance(traj, FootTrajectory):
+            hatch_alt = True
+            for t in range(1, len(traj.positions)):
+                if traj.positions[t][2] < 1e-13 and traj.positions[t-1][2] > 1e-13:
+                    # First timestep with this foot on the ground, draw foot.
+                    # TODO: Rotate foot
+                    ax.add_patch(
+                        patches.Rectangle(
+                            (
+                                traj.positions[t][0] - constants.FOOT_LENGTH / 2.0,
+                                traj.positions[t][1] - constants.FOOT_WIDTH / 2.0,
+                            ),
+                            constants.FOOT_LENGTH, constants.FOOT_WIDTH,
+                            fill=False, hatch='\\' if hatch_alt else '/',
+                            color=traj.color
+                        )
+                    )
+                    hatch_alt = not hatch_alt
+
     leg = ax.legend()
     for legobj in leg.legendHandles:
         legobj.set_linewidth(5.0)
