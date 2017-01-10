@@ -3,7 +3,7 @@ import rbdl
 
 from dynfil import constants, zmp, kinematics, filter
 from dynfil.bodies import BodyTrajectory
-from dynfil.utils.plot import plot_trajectories, PlotTrajectory
+from dynfil.utils import plot
 from dynfil.utils.meshup import save_to_meshup
 
 model = rbdl.loadModel('data/models/iCubHeidelberg01_no_weights.urdf')
@@ -50,15 +50,18 @@ save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 save_to_meshup('out/inverse_after_filter.csv', timesteps, q_filtered)
 
 # Generate plots
-plot_trajectories(
+plot.plot_q_values(timesteps, q_calc, qdot_calc, qddot_calc, filename='out/q_calc.png', show=True)
+plot.plot_q_values(timesteps, q_filtered, qdot_filtered, qddot_filtered, filename='out/q_filtered.png', show=True)
+
+plot.plot_trajectories(
     trajectories=[
-        PlotTrajectory(positions=chest.traj_pos, rotations=chest.traj_ort, label='PG: CoM', color='y'),
-        PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
-        PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
-        PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
-        PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
-        PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
-        PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
+        plot.PlotTrajectory(positions=chest.traj_pos, rotations=chest.traj_ort, label='PG: CoM', color='y'),
+        plot.PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
+        plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
+        plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
+        plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
+        plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
+        plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories.png',
     show=True

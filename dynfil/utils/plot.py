@@ -76,18 +76,22 @@ def plot_trajectories_from_top(trajectories, filename, show=False):
         plt.show()
 
 
-def plot_q_values():
+def plot_q_values(times, q, qdot, qddot, filename, show=False):
+    fig, axes = plt.subplots(len(q[0]), 3, sharex=True)
 
-    fig = plt.figure()
-    ax = fig.gca()
+    for i in range(len(q[0])):
+        ax_q, ax_qdot, ax_qddot = axes[i]
+        ax_q.plot(times, q[:,i], label=r'$q_{}$'.format(i), marker='.', markersize=0.5)
+        ax_qdot.plot(times, qdot[:,i], label=r'$\dot q_{}$'.format(i), marker='.', markersize=0.5)
+        ax_qddot.plot(times, qddot[:,i], label=r'$\ddot q_{}$'.format(i), marker='.', markersize=0.5)
 
-    for i in range(len(q_calc[0,:])):
-        ax.plot(timesteps, qdot_calc[:,i], label='qdot_{}'.format(i), marker='.')
+    axes[0, 0].set_title('q')
+    axes[0, 1].set_title('qdot')
+    axes[0, 2].set_title('qddot')
+    axes[-1, 0].set_xlabel('time')
+    axes[-1, 1].set_xlabel('time')
+    axes[-1, 2].set_xlabel('time')
 
-    leg = ax.legend()
-    for legobj in leg.legendHandles:
-        legobj.set_linewidth(5.0)
-
-    ax.set_xlabel('t')
-    ax.set_ylabel('value')
-    plt.show()
+    fig.savefig(filename)
+    if show:
+        plt.show()
