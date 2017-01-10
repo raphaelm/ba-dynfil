@@ -2,6 +2,16 @@ import numpy as np
 import rbdl
 
 
+def com_trajectory(model, chest, q):
+    com = np.zeros((len(q), 3))
+    for t in range(len(q)):
+        com_tmp = np.zeros(3)
+        rbdl.CalcCenterOfMass(model, q[t], np.zeros(model.dof_count), com_tmp)
+        com_tmp = rbdl.CalcBaseToBodyCoordinates(model, q[t], chest.id, com_tmp)
+        com[t] = com_tmp
+    return com
+
+
 def move_chest_body_to_com(model, q_ini, chest, lsole, rsole, trials=10):
     """
     Move the body_point of our chest body. This is an approach to compensate

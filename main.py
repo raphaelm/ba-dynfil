@@ -34,6 +34,7 @@ q_calc_raw, qdot_calc_raw, qddot_calc_raw = kinematics.inverse_with_derivatives(
 q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
     model, q_ini, chest, lsole, rsole, timesteps, interpolate=True
 )
+com_calc = kinematics.com_trajectory(model, chest, q_calc)
 zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
 # Apply dynamic filter
@@ -74,6 +75,7 @@ plot.plot_trajectories(
         plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
+        plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
         #plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
         #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
@@ -90,5 +92,15 @@ plot.plot_trajectories_from_top(
         #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories_on_ground.png',
+    show=True
+)
+
+plot.plot_trajectories_from_top(
+    trajectories=[
+        plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='PG: CoM', color='r'),
+        plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
+        #plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
+    ],
+    filename='out/trajectories_waist.png',
     show=True
 )

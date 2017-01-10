@@ -18,6 +18,7 @@ def rotate_vector(vec, matarr):
 
 
 PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color')
+FootTrajectory = namedtuple('FootTrajectory', 'positions rotations')
 
 
 def plot_trajectories(trajectories, filename=None, show=False):
