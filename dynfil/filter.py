@@ -53,4 +53,4 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
             diffxy = np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t, 0:2])
             chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
-    return chest.traj_pos
+    return chest
