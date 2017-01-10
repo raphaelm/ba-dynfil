@@ -76,14 +76,21 @@ def plot_trajectories_from_top(trajectories, filename, show=False):
         plt.show()
 
 
-def plot_q_values(times, q, qdot, qddot, filename, show=False):
-    fig, axes = plt.subplots(len(q[0]), 3, sharex=True)
+def plot_q_values(times, q, qdot, qddot, filename, show=False, limit=None):
+    if not isinstance(q, tuple):
+        q = (q,)
+    nplots = len(q[0][0])
+    if limit:
+        nplots = min(limit, nplots)
+    fig, axes = plt.subplots(nplots, 3, sharex=True)
 
-    for i in range(len(q[0])):
+    for i in range(nplots):
         ax_q, ax_qdot, ax_qddot = axes[i]
-        ax_q.plot(times, q[:,i], label=r'$q_{}$'.format(i), marker='.', markersize=0.5)
-        ax_qdot.plot(times, qdot[:,i], label=r'$\dot q_{}$'.format(i), marker='.', markersize=0.5)
-        ax_qddot.plot(times, qddot[:,i], label=r'$\ddot q_{}$'.format(i), marker='.', markersize=0.5)
+
+        for k in range(len(q)):
+            ax_q.plot(times, q[k][:,i], label=r'$q_{}$'.format(i), marker='x', markersize=2)
+            ax_qdot.plot(times, qdot[k][:,i], label=r'$\dot q_{}$'.format(i), marker='x', markersize=2)
+            ax_qddot.plot(times, qddot[k][:,i], label=r'$\ddot q_{}$'.format(i), marker='x', markersize=2)
 
     axes[0, 0].set_title('q')
     axes[0, 1].set_title('qdot')
@@ -91,6 +98,26 @@ def plot_q_values(times, q, qdot, qddot, filename, show=False):
     axes[-1, 0].set_xlabel('time')
     axes[-1, 1].set_xlabel('time')
     axes[-1, 2].set_xlabel('time')
+
+    fig.savefig(filename)
+    if show:
+        plt.show()
+
+
+def plot_q_interpolation(times, qddot_without, qddot_with, filename, limit=5, show=False):
+    nplots = len(qddot_with[0])
+    if limit:
+        nplots = min(limit, nplots)
+    fig, axes = plt.subplots(nplots, 2, sharex=True)
+
+    for i in range(nplots):
+        axes[i, 0].plot(times, qddot_without[:,i], label=r'$\ddot q_{}$'.format(i), marker='x', markersize=2)
+        axes[i, 1].plot(times, qddot_with[:,i], label=r'$\ddot q_{}$'.format(i), marker='x', markersize=2)
+
+    axes[0, 0].set_title('qddot without interpolation')
+    axes[0, 1].set_title('qddot with interpolation')
+    axes[-1, 0].set_xlabel('time')
+    axes[-1, 1].set_xlabel('time')
 
     fig.savefig(filename)
     if show:

@@ -50,7 +50,7 @@ def inverse(model, q_ini, chest, lsole, rsole):
     return q
 
 
-def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times):
+def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, interpolate=False):
     """
     Like inverse(), but returns a tuple of (q, qdot, qddot)
     """
@@ -58,17 +58,45 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times):
 
     qdot = np.zeros((len(q), model.qdot_size))
     qddot = np.zeros((len(q), model.qdot_size))
+    interpolate_range = 4
+    interpolate_degree = 5
 
     for t in range(len(q)):  # Iterate over timesteps
-        # Calculate qdot and qddot using finite differences
-        if t > 0 and times[t] > times[t - 1]:
-            qdot[t] = (q[t] - q[t - 1]) / (times[t] - times[t - 1])
-        else:
-            qdot[t] = np.zeros(model.qdot_size)
+        if t < interpolate_range or not interpolate:
+            # First values: Take naive finite differences
+            if t > 0 and times[t] > times[t - 1]:
+                qdot[t] = (q[t] - q[t - 1]) / (times[t] - times[t - 1])
+            else:
+                qdot[t] = np.zeros(model.qdot_size)
 
-        if t > 1 and times[t] > times[t - 1]:
-            qddot[t] = (qdot[t] - qdot[t - 1]) / (times[t] - times[t - 1])
         else:
-            qddot[t] = np.zeros(model.qdot_size)
+            # Use polynomial interpolation between values
+            p = np.polyfit(
+                times[t - interpolate_range:t + interpolate_range],
+                q[t - interpolate_range:t + interpolate_range],
+                interpolate_degree
+            )
+            h = 0.0001
+
+            qdot[t] = (np.polyval(p, times[t]) - np.polyval(p, times[t] - h)) / h
+
+    for t in range(len(q)):
+        if t < interpolate_range or not interpolate:
+            # First values: Take naive finite differences
+            if t > 1 and times[t] > times[t - 1]:
+                qddot[t] = (qdot[t] - qdot[t - 1]) / (times[t] - times[t - 1])
+            else:
+                qddot[t] = np.zeros(model.qdot_size)
+
+        else:
+            # Use polynomial interpolation between values
+            p = np.polyfit(
+                times[t - interpolate_range:t + interpolate_range],
+                qdot[t - interpolate_range:t + interpolate_range],
+                interpolate_degree
+            )
+            h = 0.0001
+
+            qddot[t] = (np.polyval(p, times[t]) - np.polyval(p, times[t] - h)) / h
 
     return q, qdot, qddot

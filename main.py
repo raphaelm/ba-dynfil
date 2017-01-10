@@ -28,8 +28,11 @@ rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
 zmp_ref = pgdata[:, 19:22]
 
 # First ZMP calculation
+q_calc_raw, qdot_calc_raw, qddot_calc_raw = kinematics.inverse_with_derivatives(
+    model, q_ini, chest, lsole, rsole, timesteps, interpolate=False
+)
 q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
-    model, q_ini, chest, lsole, rsole, timesteps
+    model, q_ini, chest, lsole, rsole, timesteps, interpolate=True
 )
 zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
@@ -50,8 +53,16 @@ save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 save_to_meshup('out/inverse_after_filter.csv', timesteps, q_filtered)
 
 # Generate plots
-plot.plot_q_values(timesteps, q_calc, qdot_calc, qddot_calc, filename='out/q_calc.png', show=True)
-plot.plot_q_values(timesteps, q_filtered, qdot_filtered, qddot_filtered, filename='out/q_filtered.png', show=True)
+plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, limit=5, filename='out/test_interpol.png', show=True)
+plot.plot_q_values(
+    timesteps,
+    (q_calc, q_filtered),
+    (qdot_calc, qddot_filtered),
+    (qddot_calc, qddot_filtered),
+    limit=5,
+    filename='out/q_calc.png',
+    show=True,
+)
 
 plot.plot_trajectories(
     trajectories=[
