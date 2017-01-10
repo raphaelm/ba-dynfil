@@ -53,7 +53,10 @@ save_to_meshup('out/inverse_from_pg.csv', timesteps, q_calc)
 save_to_meshup('out/inverse_after_filter.csv', timesteps, q_filtered)
 
 # Generate plots
-plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, limit=5, filename='out/test_interpol.png', show=True)
+plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc, name='qdot',
+                          limit=5, filename='out/test_interpol.png', show=True)
+plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, name='qddot',
+                          limit=5, filename='out/test_interpol.png', show=True)
 plot.plot_q_values(
     timesteps,
     (q_calc, q_filtered),
@@ -71,9 +74,21 @@ plot.plot_trajectories(
         plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
-        plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
-        plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
+        #plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
+        #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories.png',
+    show=True
+)
+
+plot.plot_trajectories_from_top(
+    trajectories=[
+        plot.PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
+        plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
+        plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
+        plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
+        #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
+    ],
+    filename='out/trajectories_on_ground.png',
     show=True
 )
