@@ -1,11 +1,14 @@
 import numpy as np
 import rbdl
 import sys
+import warnings
 
 from dynfil import constants, zmp, kinematics, filter
 from dynfil.bodies import BodyTrajectory
 from dynfil.utils import plot
 from dynfil.utils.meshup import save_to_meshup
+
+warnings.simplefilter("once", category=np.RankWarning)
 
 model = rbdl.loadModel('data/models/iCubHeidelberg01_no_weights.urdf')
 
