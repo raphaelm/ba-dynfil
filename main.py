@@ -39,7 +39,7 @@ com_calc = kinematics.com_trajectory(model, chest, q_calc)
 zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
 # Apply dynamic filter
-chest_filtered = filter.dynfil_newton_numerical(
+chest_filtered = filter.dynfil_least_squares(
     chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
     model=model, times=timesteps, iterations=1
 )
@@ -80,8 +80,8 @@ plot.plot_trajectories(
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
         plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
-        #plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
-        #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
+        plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
+        plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories.png',
     show=show_plots
@@ -95,7 +95,7 @@ plot.plot_trajectories_from_top(
         plot.FootTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, color='g'),
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
-        #plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
+        plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
     filename='out/trajectories_on_ground.png',
     show=show_plots
@@ -105,7 +105,7 @@ plot.plot_trajectories_from_top(
     trajectories=[
         plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='PG: CoM', color='r'),
         plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
-        #plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
+        plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
     ],
     filename='out/trajectories_waist.png',
     show=show_plots

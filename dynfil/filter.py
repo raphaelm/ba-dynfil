@@ -61,3 +61,41 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
             chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
     return chest
+
+
+def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5):
+    """
+    Applies the dynamic filter using Gauss-Newton minimization
+    """
+    chest = chest.copy()
+
+    for i in range(iterations):
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, times
+        )
+        zmp_calc = zmp.calculate_zmp_trajectory(
+            model, q_calc, qdot_calc, qddot_calc, chest
+        )
+        zmp_diff = zmp_calc - zmp_ref
+
+        # Calculate jacobians
+        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times)
+
+        for t in range(len(chest)):  # Iterate over timesteps
+            # One Gauss-Newton iteration: x -= (A^T A)^-1 A^T b
+            # with A = jacobian, b = zmp_diff
+            diffxy = np.dot(
+                np.dot(
+                    np.linalg.inv(
+                        np.dot(
+                            np.transpose(jacobians[t]),
+                            jacobians[t]
+                        )
+                    ),
+                    np.transpose(jacobians[t])
+                ),
+                zmp_diff[t, 0:2]
+            )
+            chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
+
+    return chest
