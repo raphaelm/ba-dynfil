@@ -3,7 +3,8 @@ import numpy as np
 from . import zmp, kinematics
 
 
-def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times):
+def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times,
+                  ik=kinematics.inverse_with_derivatives):
     """
     Calculate the Jacobian of r_ZMP(c) for every timestep in the trajectory.
     """
@@ -23,7 +24,7 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times):
         chest_modified = chest.copy()
         chest_modified.traj_pos += h_vec
 
-        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+        q_calc, qdot_calc, qddot_calc = ik(
             model, q_ini, chest_modified, lsole, rsole, times
         )
         zmp_calc_second = zmp.calculate_zmp_trajectory(
@@ -35,7 +36,8 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times):
     return jacobians
 
 
-def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5):
+def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5,
+                            ik=kinematics.inverse_with_derivatives):
     """
     Applies the dynamic filter using Newton-Raphson iterations and numerical derivatives.
     (See Algorithm 2.2 in thesis)
@@ -44,7 +46,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
     for i in range(iterations):
 
-        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+        q_calc, qdot_calc, qddot_calc = ik(
             model, q_ini, chest, lsole, rsole, times
         )
         zmp_calc = zmp.calculate_zmp_trajectory(
@@ -53,7 +55,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
         zmp_diff = zmp_calc - zmp_ref
 
         # Calculate jacobians
-        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times)
+        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times, ik)
 
         for t in range(len(chest)):  # Iterate over timesteps
             # One Newton iteration:
@@ -63,14 +65,15 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
     return chest
 
 
-def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5):
+def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
+                         ik=kinematics.inverse_with_derivatives, iterations=5):
     """
     Applies the dynamic filter using Gauss-Newton minimization
     """
     chest = chest.copy()
 
     for i in range(iterations):
-        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+        q_calc, qdot_calc, qddot_calc = ik(
             model, q_ini, chest, lsole, rsole, times
         )
         zmp_calc = zmp.calculate_zmp_trajectory(

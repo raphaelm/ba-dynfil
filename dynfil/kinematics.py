@@ -7,7 +7,6 @@ def com_trajectory(model, chest, q):
     for t in range(len(q)):
         com_tmp = np.zeros(3)
         rbdl.CalcCenterOfMass(model, q[t], np.zeros(model.dof_count), com_tmp)
-        com_tmp = rbdl.CalcBaseToBodyCoordinates(model, q[t], chest.id, com_tmp)
         com[t] = com_tmp
     return com
 

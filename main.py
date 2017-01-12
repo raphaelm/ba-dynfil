@@ -31,11 +31,14 @@ rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
 
 zmp_ref = pgdata[:, 19:22]
 
+# Choose IK method
+ik = kinematics.inverse_with_derivatives
+
 # First ZMP calculation
-q_calc_raw, qdot_calc_raw, qddot_calc_raw = kinematics.inverse_with_derivatives(
+q_calc_raw, qdot_calc_raw, qddot_calc_raw = ik(
     model, q_ini, chest, lsole, rsole, timesteps, interpolate=False
 )
-q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+q_calc, qdot_calc, qddot_calc = ik(
     model, q_ini, chest, lsole, rsole, timesteps, interpolate=True
 )
 com_calc = kinematics.com_trajectory(model, chest, q_calc)
@@ -44,11 +47,11 @@ zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, ch
 # Apply dynamic filter
 chest_filtered = filter.dynfil_least_squares(
     chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
-    model=model, times=timesteps, iterations=1
+    model=model, times=timesteps, iterations=1, ik=ik
 )
 
 # Calculate ZMP from filtered result
-q_filtered, qdot_filtered, qddot_filtered = kinematics.inverse_with_derivatives(
+q_filtered, qdot_filtered, qddot_filtered = ik(
     model, q_ini, chest_filtered, lsole, rsole, timesteps
 )
 zmp_filtered = zmp.calculate_zmp_trajectory(model, q_filtered, qdot_filtered, qddot_filtered, chest_filtered)
