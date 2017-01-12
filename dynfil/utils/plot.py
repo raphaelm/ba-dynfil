@@ -174,8 +174,9 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
 
 
 def plot_residuums(data, filename=None, show=False):
-    fig, axes = plt.subplots(2, 2)
+    fig, axes = plt.subplots(len(data), 3)
 
+    prev_normed_data = None
     for i, row in enumerate(data):
         if isinstance(row, PlotResiduum):
             normed_data = (row.values * row.values).sum(axis=1) ** 0.5
@@ -185,6 +186,26 @@ def plot_residuums(data, filename=None, show=False):
             axes[i, 0].set_title(row.label)
 
             axes[i, 1].hist(normed_data, label=row.label, color=row.color)
+
+            if prev_normed_data is not None:
+                improved_cnt = np.sum(np.less(normed_data, prev_normed_data))
+                equal_cnt = np.sum(np.equal(normed_data, prev_normed_data))
+                degr_cnt = len(normed_data) - improved_cnt - equal_cnt
+
+                axes[i, 2].pie(
+                    [improved_cnt, equal_cnt, degr_cnt],
+                    labels=[
+                        'better ({})'.format(improved_cnt),
+                        'equal ({})'.format(equal_cnt),
+                        'worse ({})'.format(degr_cnt),
+                    ],
+                    colors=['g', 'y', 'r'],
+                )
+            else:
+                axes[i, 2].axis('off')
+
+
+            prev_normed_data = normed_data
 
     axes[-1, 0].set_xlabel('time')
     axes[-1, 1].set_xlabel('residuum')
