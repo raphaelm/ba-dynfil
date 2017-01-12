@@ -23,6 +23,7 @@ def rotate_vector(vec, matarr):
 
 PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color')
 FootTrajectory = namedtuple('FootTrajectory', 'positions rotations color')
+PlotResiduum = namedtuple('PlotResiduum', 'times values label color')
 
 
 def plot_trajectories(trajectories, filename=None, show=False):
@@ -166,6 +167,28 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
     axes[-1, 0].set_xlabel('time')
     axes[-1, 1].set_xlabel('time')
 
+    if filename:
+        fig.savefig(filename)
+    if show:
+        plt.show()
+
+
+def plot_residuums(data, filename=None, show=False):
+    fig, axes = plt.subplots(2, 2)
+
+    for i, row in enumerate(data):
+        if isinstance(row, PlotResiduum):
+            normed_data = (row.values * row.values).sum(axis=1) ** 0.5
+
+            axes[i, 0].plot(row.times, normed_data, label=row.label, color=row.color)
+            axes[i, 0].set_ylabel('residuum')
+            axes[i, 0].set_title(row.label)
+
+            axes[i, 1].hist(normed_data, label=row.label, color=row.color)
+
+    axes[-1, 0].set_xlabel('time')
+    axes[-1, 1].set_xlabel('residuum')
+    plt.tight_layout()
     if filename:
         fig.savefig(filename)
     if show:

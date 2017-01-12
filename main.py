@@ -116,3 +116,14 @@ plot.plot_trajectories_from_top(
     filename='out/trajectories_waist.png',
     show=show_plots
 )
+
+plot.plot_residuums(
+    data=[
+        plot.PlotResiduum(times=timesteps, values=zmp_calc - zmp_ref,
+                          label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ without filter', color='b'),
+        plot.PlotResiduum(times=timesteps, values=zmp_filtered - zmp_ref,
+                          label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter', color='g')
+    ],
+    filename='out/residuums.png',
+    show=show_plots
+)
