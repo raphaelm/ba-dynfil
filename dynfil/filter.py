@@ -37,7 +37,8 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times,
 
 
 def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5,
-                            ik=kinematics.inverse_with_derivatives):
+                            ik=kinematics.inverse_with_derivatives,
+                            status_update=lambda i, n: None):
     """
     Applies the dynamic filter using Newton-Raphson iterations and numerical derivatives.
     (See Algorithm 2.2 in thesis)
@@ -45,6 +46,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
     chest = chest.copy()
 
     for i in range(iterations):
+        status_update(i + 1, iterations)
 
         q_calc, qdot_calc, qddot_calc = ik(
             model, q_ini, chest, lsole, rsole, times
@@ -66,13 +68,16 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
 
 def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                         ik=kinematics.inverse_with_derivatives, iterations=5):
+                         ik=kinematics.inverse_with_derivatives, iterations=5,
+                         status_update=lambda i, n: None):
     """
     Applies the dynamic filter using Gauss-Newton minimization
     """
     chest = chest.copy()
 
     for i in range(iterations):
+        status_update(i + 1, iterations)
+
         q_calc, qdot_calc, qddot_calc = ik(
             model, q_ini, chest, lsole, rsole, times
         )
