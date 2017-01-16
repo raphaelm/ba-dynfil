@@ -16,7 +16,7 @@ model = rbdl.loadModel('data/models/iCubHeidelberg01_no_weights.urdf')
 q_ini = constants.POSE_HALF_SITTING
 
 # Load data from file
-pgdata = np.genfromtxt('data/traj/alpha0015beta02/PatternGeneratorData.csv', delimiter=',', dtype=None)
+pgdata = np.genfromtxt('data/pgdata3.txt', delimiter=' ', dtype=None)
 timesteps = pgdata[:, 0]
 
 offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
@@ -86,10 +86,47 @@ plot.plot_trajectories(
         plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
         plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
+    ],
+    filename='out/trajectories.png',
+    show=show_plots
+)
+
+plot.plot_trajectories(
+    trajectories=[
+        plot.PlotTrajectory(positions=chest.traj_pos, rotations=chest.traj_ort, label='PG: CoM', color='y'),
+        plot.PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
+        plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
+        plot.FootTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, color='r'),
+        plot.FootTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, color='g'),
+        plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
+        plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
+        plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
         plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
         plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
-    filename='out/trajectories.png',
+    filename='out/trajectories_with_filtered.png',
+    show=show_plots
+)
+
+plot.plot_trajectories_from_top(
+    trajectories=[
+        plot.PlotTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, label='PG: left foot', color='r'),
+        plot.PlotTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, label='PG: right foot', color='g'),
+        plot.FootTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, color='r'),
+        plot.FootTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, color='g'),
+        plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
+        plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
+    ],
+    filename='out/trajectories_on_ground.png',
+    show=show_plots
+)
+
+plot.plot_trajectories_from_top(
+    trajectories=[
+        plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='PG: CoM', color='r'),
+        plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
+    ],
+    filename='out/trajectories_waist.png',
     show=show_plots
 )
 
@@ -103,7 +140,7 @@ plot.plot_trajectories_from_top(
         plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
         plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
     ],
-    filename='out/trajectories_on_ground.png',
+    filename='out/trajectories_on_ground_with_filtered.png',
     show=show_plots
 )
 
@@ -113,7 +150,7 @@ plot.plot_trajectories_from_top(
         plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
         plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
     ],
-    filename='out/trajectories_waist.png',
+    filename='out/trajectories_waist_with_filtered.png',
     show=show_plots
 )
 
