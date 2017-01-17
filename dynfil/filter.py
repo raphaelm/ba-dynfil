@@ -147,6 +147,7 @@ def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             )
 
         for t in range(2, len(chest)):  # Iterate over timesteps
+            # FIXME PROBLEM here is non-convexity!
             # Gamma from Barzilai-Borwein method, see
             # https://en.wikipedia.org/wiki/Gradient_descent#Description
             gamma = (

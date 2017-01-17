@@ -4,4 +4,5 @@ env/
 *.pyc
 *~
 out/
+obj_meshes_meshup
 
