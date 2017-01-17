@@ -38,7 +38,6 @@ ik = kinematics.inverse_with_derivatives
 
 # First ZMP calculation
 with status('Calculate ZMP from forward run'):
-    # TODO Why do you call ik twice? Add if else clause?
     q_calc_raw, qdot_calc_raw, qddot_calc_raw = ik(
         model, q_ini, chest, lsole, rsole, timesteps, interpolate=False
     )
@@ -50,9 +49,9 @@ with status('Calculate ZMP from forward run'):
 
 # Apply dynamic filter
 with status('Apply dynamic filter') as status_update:
-    chest_filtered = filter.dynfil_gradient_descent(
+    chest_filtered = filter.dynfil_newton_numerical(
         chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
-        model=model, times=timesteps, iterations=2, ik=ik, status_update=status_update
+        model=model, times=timesteps, iterations=5, ik=ik, status_update=status_update
     )
 
 # Calculate ZMP from filtered result
