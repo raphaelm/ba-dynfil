@@ -26,10 +26,12 @@ FootTrajectory = namedtuple('FootTrajectory', 'positions rotations color')
 PlotResiduum = namedtuple('PlotResiduum', 'times values label color')
 
 
-def plot_trajectories(trajectories, filename=None, show=False):
+def plot_trajectories(trajectories, filename=None, title=None):
     mpl.rcParams['legend.fontsize'] = 10
 
     fig = plt.figure()
+    if title:
+        fig.suptitle(title)
     ax = fig.gca(projection='3d')
 
     for traj in trajectories:
@@ -83,13 +85,13 @@ def plot_trajectories(trajectories, filename=None, show=False):
     ax.set_zlabel('z')
     if filename:
         fig.savefig(filename)
-    if show:
-        plt.show()
 
 
-def plot_trajectories_from_top(trajectories, filename=None, show=False):
+def plot_trajectories_from_top(trajectories, filename=None, title=None):
     fig = plt.figure()
     ax = fig.gca()
+    if title:
+        fig.suptitle(title)
     for traj in trajectories:
         if isinstance(traj, PlotTrajectory):
             ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label)
@@ -119,17 +121,17 @@ def plot_trajectories_from_top(trajectories, filename=None, show=False):
     ax.set_ylabel('y')
     if filename:
         fig.savefig(filename)
-    if show:
-        plt.show()
 
 
-def plot_q_values(times, q, qdot, qddot, filename=None, show=False, limit=None):
+def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
     if not isinstance(q, tuple):
         q = (q,)
     nplots = len(q[0][0])
     if limit:
         nplots = min(limit, nplots)
     fig, axes = plt.subplots(nplots, 3, sharex=True)
+    if title:
+        fig.suptitle(title)
 
     for i in range(nplots):
         ax_q, ax_qdot, ax_qddot = axes[i]
@@ -148,15 +150,15 @@ def plot_q_values(times, q, qdot, qddot, filename=None, show=False, limit=None):
 
     if filename:
         fig.savefig(filename)
-    if show:
-        plt.show()
 
 
-def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=None, limit=5, show=False):
+def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=None, limit=5, title=None):
     nplots = len(data_with[0])
     if limit:
         nplots = min(limit, nplots)
     fig, axes = plt.subplots(nplots, 2, sharex=True)
+    if title:
+        fig.suptitle(title)
 
     for i in range(nplots):
         axes[i, 0].plot(times, data_without[:,i], marker='x', markersize=2)
@@ -169,12 +171,12 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
 
     if filename:
         fig.savefig(filename)
-    if show:
-        plt.show()
 
 
-def plot_residuums(data, filename=None, show=False):
+def plot_residuums(data, filename=None, title=None):
     fig, axes = plt.subplots(len(data), 3)
+    if title:
+        fig.suptitle(title)
 
     prev_normed_data = None
     for i, row in enumerate(data):
@@ -212,5 +214,7 @@ def plot_residuums(data, filename=None, show=False):
     plt.tight_layout()
     if filename:
         fig.savefig(filename)
-    if show:
-        plt.show()
+
+
+def show_all():
+    plt.show()
