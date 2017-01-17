@@ -10,7 +10,7 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times,
     """
     h = 1e-10
 
-    # Allocate an array of jacobians (one for each timestep)
+    # Allocate an array of Jacobians (one for each timestep)
     jacobians = np.zeros((len(times), 2, 2))
 
     # We only do this in 2D here
@@ -61,6 +61,10 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
         for t in range(len(chest)):  # Iterate over timesteps
             # One Newton iteration:
+            # TODO check how inverse is computed?
+            #      good choice could be QR decomposition
+            # TODO check rank
+            # TODO add Levenberg-Marquardt in case of rank insufficiencies
             diffxy = np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t, 0:2])
             chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
@@ -92,6 +96,9 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         for t in range(len(chest)):  # Iterate over timesteps
             # One Gauss-Newton iteration: x -= (A^T A)^-1 A^T b
             # with A = jacobian, b = zmp_diff
+            # TODO try np.pinv for Moore-Penrose pseudo inverse
+            # TODO check rank of matrix
+            # TODO add Levenberg-Marquardt in case of rank insufficiencies
             diffxy = np.dot(
                 np.dot(
                     np.linalg.inv(

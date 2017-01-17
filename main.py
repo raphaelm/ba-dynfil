@@ -38,6 +38,7 @@ ik = kinematics.inverse_with_derivatives
 
 # First ZMP calculation
 with status('Calculate ZMP from forward run'):
+    # TODO Why do you call ik twice? Add if else clause?
     q_calc_raw, qdot_calc_raw, qddot_calc_raw = ik(
         model, q_ini, chest, lsole, rsole, timesteps, interpolate=False
     )
