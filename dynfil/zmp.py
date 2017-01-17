@@ -26,7 +26,7 @@ def calculate_zmp_trajectory(model, q, qdot, qddot, chest):
         # Calculate CoM position and transform to ZMP world coordinate
         # TODO is this correct?
         zmp_pos = rbdl.CalcBodyToBaseCoordinates(
-            model, q[t], chest.id, _zmp
+            model, q[t], chest.id, chest.body_point + _zmp
         )
 
         zmp_pos[2] = 0
