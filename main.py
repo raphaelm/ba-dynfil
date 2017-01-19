@@ -74,6 +74,16 @@ def main(model, trajectory, out_dir, show, filter_method, iterations, csv_delim,
         com_calc = kinematics.com_trajectory(model, chest, q_calc)
         zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
+    with status('Export inverse kinematics results as files'):
+        export_data = np.zeros((q_calc.shape[0], 1 + q_calc.shape[1]))
+        export_data[:, 0] = timesteps
+        export_data[:, 1:] = q_calc
+        np.savetxt('out/q_calc.txt', export_data, fmt="%.18f", delimiter=", ", newline="\n", comments="")
+        export_data[:, 1:] = qdot_calc
+        np.savetxt('out/qdot_calc.txt', export_data, fmt="%.18f", delimiter=", ", newline="\n", comments="")
+        export_data[:, 1:] = qddot_calc
+        np.savetxt('out/qddot_calc.txt', export_data, fmt="%.18f", delimiter=", ", newline="\n", comments="")
+
     # Apply dynamic filter
     with status('Apply dynamic filter') as status_update:
         filters = {
