@@ -125,7 +125,35 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
         fig.savefig(filename, dpi=300)
 
 
-def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
+def plot_q_values(times, q, labels, filename=None, title=None):
+    if not isinstance(q, tuple):
+        q = (q,)
+    nplots = len(q[0][0])
+    fig, axes = plt.subplots(int(nplots / 4) + 1, 4, sharex=True)
+    if title:
+        fig.suptitle(title)
+
+    for i in range(nplots):
+        ax = axes[int(i / 4)][i % 4]
+        ax.set_title('$q_{%d}$' % i)
+
+        for k in range(len(q)):
+            ax.plot(times, q[k][:,i], label=labels[k], marker='x', markersize=2)
+
+        if i == 0:
+            ax.legend()
+
+    axes[0, 0].set_ylabel('q')
+    axes[-1, 0].set_xlabel('time')
+    axes[-1, 1].set_xlabel('time')
+    axes[-1, 2].set_xlabel('time')
+    axes[-1, 3].set_xlabel('time')
+
+    if filename:
+        fig.savefig(filename, dpi=300)
+
+
+def plot_q_derivs(times, q, qdot, qddot, labels, filename=None, limit=None, title=None):
     if not isinstance(q, tuple):
         q = (q,)
     nplots = len(q[0][0])
@@ -139,9 +167,12 @@ def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
         ax_q, ax_qdot, ax_qddot = axes[i]
 
         for k in range(len(q)):
-            ax_q.plot(times, q[k][:,i], label=r'$q_{}$'.format(i), marker='x', markersize=2)
-            ax_qdot.plot(times, qdot[k][:,i], label=r'$\dot q_{}$'.format(i), marker='x', markersize=2)
-            ax_qddot.plot(times, qddot[k][:,i], label=r'$\ddot q_{}$'.format(i), marker='x', markersize=2)
+            ax_q.plot(times, q[k][:,i], label=labels[k], marker='x', markersize=2)
+            ax_qdot.plot(times, qdot[k][:,i], label=labels[k], marker='x', markersize=2)
+            ax_qddot.plot(times, qddot[k][:,i], label=labels[k], marker='x', markersize=2)
+
+        if i == 0:
+            ax_q.legend()
 
     axes[0, 0].set_title('q')
     axes[0, 1].set_title('qdot')
@@ -150,6 +181,7 @@ def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
     axes[-1, 1].set_xlabel('time')
     axes[-1, 2].set_xlabel('time')
 
+    fig.tight_layout()
     if filename:
         fig.savefig(filename, dpi=300)
 

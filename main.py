@@ -45,7 +45,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations, csv_delim,
 
         offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
         chest = BodyTrajectory(model, model.GetBodyId("chest"))
-        chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7], offset_angles)
+        chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7])#, offset_angles)
 
         lsole = BodyTrajectory(model, model.GetBodyId("l_sole"))
         lsole.set_trajectories(pgdata[:, 7:10], pgdata[:, 10:13])
@@ -119,11 +119,19 @@ def main(model, trajectory, out_dir, show, filter_method, iterations, csv_delim,
         plot.plot_q_values(
             timesteps,
             (q_calc, q_filtered),
+            labels=('forward run', 'filtered'),
+            filename=os.path.join(out_dir, 'q_all.pdf'),
+            title='Filter results on trajectories'
+        )
+        plot.plot_q_derivs(
+            timesteps,
+            (q_calc, q_filtered),
             (qdot_calc, qddot_filtered),
             (qddot_calc, qddot_filtered),
+            labels=('forward run', 'filtered'),
             limit=5,
-            filename=os.path.join(out_dir, 'q_calc.pdf'),
-            title='Filter results on trajectories'
+            filename=os.path.join(out_dir, 'q_deriv.pdf'),
+            title='Filter results on first 5 trajectories (with derivatives)'
         )
 
         plot.plot_trajectories(
@@ -191,7 +199,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations, csv_delim,
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
             ],
             filename=os.path.join(out_dir, 'trajectories_on_ground_with_filtered.pdf'),
-            title='2D Trajectories on the ground (with filteredrun)'
+            title='2D Trajectories on the ground (with filtered)'
         )
 
         plot.plot_trajectories_from_top(
