@@ -37,7 +37,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
 
     # Load data from file
     with status('Loading data'):
-        pgdata = np.genfromtxt(trajectory, delimiter=',', dtype=None)
+        pgdata = np.genfromtxt(trajectory, delimiter=' ', dtype=None)
         timesteps = pgdata[:, 0]
 
         offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
@@ -93,17 +93,19 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
     # Generate plots
     with status('Generate plots'):
         plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc, name='qdot',
-                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.png'))
+                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.pdf'),
+                                  title='Interpolation results')
         plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, name='qddot',
-                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.png'))
+                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.pdf'),
+                                  title='Interpolation results')
         plot.plot_q_values(
             timesteps,
             (q_calc, q_filtered),
             (qdot_calc, qddot_filtered),
             (qddot_calc, qddot_filtered),
             limit=5,
-            filename=os.path.join(out_dir, 'q_calc.png'),
-            title='Interpolation results'
+            filename=os.path.join(out_dir, 'q_calc.pdf'),
+            title='Filter results on trajectories'
         )
 
         plot.plot_trajectories(
@@ -117,7 +119,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
                 plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
             ],
-            filename=os.path.join(out_dir, 'trajectories.png'),
+            filename=os.path.join(out_dir, 'trajectories.pdf'),
             title='3D Trajectories (reference and forward run)'
         )
 
@@ -134,7 +136,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_with_filtered.png'),
+            filename=os.path.join(out_dir, 'trajectories_with_filtered.pdf'),
             title='3D Trajectories (with filtered)'
         )
 
@@ -147,7 +149,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_on_ground.png'),
+            filename=os.path.join(out_dir, 'trajectories_on_ground.pdf'),
             title='2D Trajectories on the ground (reference and forward run)'
         )
 
@@ -156,7 +158,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='PG: CoM', color='r'),
                 plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_waist.png'),
+            filename=os.path.join(out_dir, 'trajectories_waist.pdf'),
             title='2D Trajectories on waist height ground (reference and forward run)'
         )
 
@@ -170,7 +172,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_on_ground_with_filtered.png'),
+            filename=os.path.join(out_dir, 'trajectories_on_ground_with_filtered.pdf'),
             title='2D Trajectories on the ground (with filteredrun)'
         )
 
@@ -180,7 +182,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
                 plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_waist_with_filtered.png'),
+            filename=os.path.join(out_dir, 'trajectories_waist_with_filtered.pdf'),
             title='2D Trajectories on waist height ground (with filtered)'
         )
 
@@ -193,7 +195,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                                   label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
                                   color='g')
             ],
-            filename=os.path.join(out_dir, 'residuums.png'),
+            filename=os.path.join(out_dir, 'residuums.pdf'),
             title='Filter result summary'
         )
 

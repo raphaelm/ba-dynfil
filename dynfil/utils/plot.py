@@ -33,6 +33,7 @@ def plot_trajectories(trajectories, filename=None, title=None):
     if title:
         fig.suptitle(title)
     ax = fig.gca(projection='3d')
+    ax.axis('equal')
 
     for traj in trajectories:
         if isinstance(traj, PlotTrajectory):
@@ -84,12 +85,13 @@ def plot_trajectories(trajectories, filename=None, title=None):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     if filename:
-        fig.savefig(filename)
+        fig.savefig(filename, dpi=300)
 
 
 def plot_trajectories_from_top(trajectories, filename=None, title=None):
     fig = plt.figure()
     ax = fig.gca()
+    ax.axis('equal')
     if title:
         fig.suptitle(title)
     for traj in trajectories:
@@ -120,7 +122,7 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     if filename:
-        fig.savefig(filename)
+        fig.savefig(filename, dpi=300)
 
 
 def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
@@ -149,7 +151,7 @@ def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
     axes[-1, 2].set_xlabel('time')
 
     if filename:
-        fig.savefig(filename)
+        fig.savefig(filename, dpi=300)
 
 
 def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=None, limit=5, title=None):
@@ -170,7 +172,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
     axes[-1, 1].set_xlabel('time')
 
     if filename:
-        fig.savefig(filename)
+        fig.savefig(filename, dpi=300)
 
 
 def plot_residuums(data, filename=None, title=None):
@@ -213,7 +215,7 @@ def plot_residuums(data, filename=None, title=None):
     axes[-1, 1].set_xlabel('residuum')
     plt.tight_layout()
     if filename:
-        fig.savefig(filename)
+        fig.savefig(filename, dpi=300)
 
 
 def show_all():
