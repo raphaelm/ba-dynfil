@@ -48,7 +48,8 @@ def inverse(model, q_ini, chest, lsole, rsole):
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.lmbda = 1e-4
 
-        move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
+        if t == 0:
+            move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
 
         cs.AddFullConstraint(*chest.to_constraint(t))
         cs.AddFullConstraint(*lsole.to_constraint(t))

@@ -17,17 +17,20 @@ warnings.simplefilter("ignore", category=np.RankWarning)
 @click.command()
 @click.option('--model', default='data/models/iCubHeidelberg01_no_weights.urdf', help='Model file')
 @click.option('--trajectory', default='data/traj/alpha0015beta02/PatternGeneratorData.csv', help='Trajectory file')
+@click.option('--csv-delim', default=',', help='CSV delimiter of trajectory file')
 @click.option('--out-dir', default='out/', help='Output directory')
 @click.option('--show', is_flag=True, help='Open plot windows')
+@click.option('--interpolate/--no-interpolate', default=True, help='Apply interpolation')
 @click.option('--filter-method', type=click.Choice(['newton', 'leastsquares', 'steepestdescent']),
               help='Filter method', default='newton')
 @click.option('--iterations', type=click.IntRange(1, 100), default=5, help='Number of filter iterations')
-def main(model, trajectory, out_dir, show, filter_method, iterations):
+def main(model, trajectory, out_dir, show, filter_method, iterations, csv_delim, interpolate):
     click.echo(click.style('Model:            {}'.format(model), fg='blue'))
     click.echo(click.style('Trajectory:       {}'.format(trajectory), fg='blue'))
     click.echo(click.style('Filter method:    {}'.format(filter_method), fg='blue'))
     click.echo(click.style('Iterations:       {}'.format(iterations), fg='blue'))
     click.echo(click.style('Output directory: {}'.format(out_dir), fg='blue'))
+    click.echo(click.style('Interpolation:    {}'.format(interpolate), fg='blue'))
     click.echo()
 
     model = rbdl.loadModel(model)
@@ -37,7 +40,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
 
     # Load data from file
     with status('Loading data'):
-        pgdata = np.genfromtxt(trajectory, delimiter=',', dtype=None)
+        pgdata = np.genfromtxt(trajectory, delimiter=csv_delim, dtype=None)
         timesteps = pgdata[:, 0]
 
         offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
@@ -60,9 +63,14 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
         q_calc_raw, qdot_calc_raw, qddot_calc_raw = ik(
             model, q_ini, chest, lsole, rsole, timesteps, interpolate=False
         )
-        q_calc, qdot_calc, qddot_calc = ik(
+        q_calc_int, qdot_calc_int, qddot_calc_int = ik(
             model, q_ini, chest, lsole, rsole, timesteps, interpolate=True
         )
+        if interpolate:
+            q_calc, qdot_calc, qddot_calc = q_calc_int, qdot_calc_int, qddot_calc_int
+        else:
+            q_calc, qdot_calc, qddot_calc = q_calc_raw, qdot_calc_raw, qddot_calc_raw
+
         com_calc = kinematics.com_trajectory(model, chest, q_calc)
         zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
@@ -92,18 +100,20 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
 
     # Generate plots
     with status('Generate plots'):
-        plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc, name='qdot',
-                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.png'))
-        plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, name='qddot',
-                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.png'))
+        plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc_int, name='qdot',
+                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.pdf'),
+                                  title='Interpolation results')
+        plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc_int, name='qddot',
+                                  limit=5, filename=os.path.join(out_dir, 'test_interpol.pdf'),
+                                  title='Interpolation results')
         plot.plot_q_values(
             timesteps,
             (q_calc, q_filtered),
             (qdot_calc, qddot_filtered),
             (qddot_calc, qddot_filtered),
             limit=5,
-            filename=os.path.join(out_dir, 'q_calc.png'),
-            title='Interpolation results'
+            filename=os.path.join(out_dir, 'q_calc.pdf'),
+            title='Filter results on trajectories'
         )
 
         plot.plot_trajectories(
@@ -117,7 +127,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
                 plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
             ],
-            filename=os.path.join(out_dir, 'trajectories.png'),
+            filename=os.path.join(out_dir, 'trajectories.pdf'),
             title='3D Trajectories (reference and forward run)'
         )
 
@@ -134,7 +144,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='b'),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_with_filtered.png'),
+            filename=os.path.join(out_dir, 'trajectories_with_filtered.pdf'),
             title='3D Trajectories (with filtered)'
         )
 
@@ -147,7 +157,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_on_ground.png'),
+            filename=os.path.join(out_dir, 'trajectories_on_ground.pdf'),
             title='2D Trajectories on the ground (reference and forward run)'
         )
 
@@ -156,7 +166,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='PG: CoM', color='r'),
                 plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_waist.png'),
+            filename=os.path.join(out_dir, 'trajectories_waist.pdf'),
             title='2D Trajectories on waist height ground (reference and forward run)'
         )
 
@@ -170,7 +180,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_on_ground_with_filtered.png'),
+            filename=os.path.join(out_dir, 'trajectories_on_ground_with_filtered.pdf'),
             title='2D Trajectories on the ground (with filteredrun)'
         )
 
@@ -180,7 +190,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                 plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
                 plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
             ],
-            filename=os.path.join(out_dir, 'trajectories_waist_with_filtered.png'),
+            filename=os.path.join(out_dir, 'trajectories_waist_with_filtered.pdf'),
             title='2D Trajectories on waist height ground (with filtered)'
         )
 
@@ -193,7 +203,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
                                   label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
                                   color='g')
             ],
-            filename=os.path.join(out_dir, 'residuums.png'),
+            filename=os.path.join(out_dir, 'residuums.pdf'),
             title='Filter result summary'
         )
 
