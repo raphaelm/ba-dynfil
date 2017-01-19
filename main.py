@@ -17,17 +17,20 @@ warnings.simplefilter("ignore", category=np.RankWarning)
 @click.command()
 @click.option('--model', default='data/models/iCubHeidelberg01_no_weights.urdf', help='Model file')
 @click.option('--trajectory', default='data/traj/alpha0015beta02/PatternGeneratorData.csv', help='Trajectory file')
+@click.option('--csv-delim', default=',', help='CSV delimiter of trajectory file')
 @click.option('--out-dir', default='out/', help='Output directory')
 @click.option('--show', is_flag=True, help='Open plot windows')
+@click.option('--interpolate/--no-interpolate', default=True, help='Apply interpolation')
 @click.option('--filter-method', type=click.Choice(['newton', 'leastsquares', 'steepestdescent']),
               help='Filter method', default='newton')
 @click.option('--iterations', type=click.IntRange(1, 100), default=5, help='Number of filter iterations')
-def main(model, trajectory, out_dir, show, filter_method, iterations):
+def main(model, trajectory, out_dir, show, filter_method, iterations, csv_delim, interpolate):
     click.echo(click.style('Model:            {}'.format(model), fg='blue'))
     click.echo(click.style('Trajectory:       {}'.format(trajectory), fg='blue'))
     click.echo(click.style('Filter method:    {}'.format(filter_method), fg='blue'))
     click.echo(click.style('Iterations:       {}'.format(iterations), fg='blue'))
     click.echo(click.style('Output directory: {}'.format(out_dir), fg='blue'))
+    click.echo(click.style('Interpolation:    {}'.format(interpolate), fg='blue'))
     click.echo()
 
     model = rbdl.loadModel(model)
@@ -37,7 +40,7 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
 
     # Load data from file
     with status('Loading data'):
-        pgdata = np.genfromtxt(trajectory, delimiter=' ', dtype=None)
+        pgdata = np.genfromtxt(trajectory, delimiter=csv_delim, dtype=None)
         timesteps = pgdata[:, 0]
 
         offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
@@ -60,9 +63,14 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
         q_calc_raw, qdot_calc_raw, qddot_calc_raw = ik(
             model, q_ini, chest, lsole, rsole, timesteps, interpolate=False
         )
-        q_calc, qdot_calc, qddot_calc = ik(
+        q_calc_int, qdot_calc_int, qddot_calc_int = ik(
             model, q_ini, chest, lsole, rsole, timesteps, interpolate=True
         )
+        if interpolate:
+            q_calc, qdot_calc, qddot_calc = q_calc_int, qdot_calc_int, qddot_calc_int
+        else:
+            q_calc, qdot_calc, qddot_calc = q_calc_raw, qdot_calc_raw, qddot_calc_raw
+
         com_calc = kinematics.com_trajectory(model, chest, q_calc)
         zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
 
@@ -92,10 +100,10 @@ def main(model, trajectory, out_dir, show, filter_method, iterations):
 
     # Generate plots
     with status('Generate plots'):
-        plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc, name='qdot',
+        plot.plot_q_interpolation(timesteps, qdot_calc_raw, qdot_calc_int, name='qdot',
                                   limit=5, filename=os.path.join(out_dir, 'test_interpol.pdf'),
                                   title='Interpolation results')
-        plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc, name='qddot',
+        plot.plot_q_interpolation(timesteps, qddot_calc_raw, qddot_calc_int, name='qddot',
                                   limit=5, filename=os.path.join(out_dir, 'test_interpol.pdf'),
                                   title='Interpolation results')
         plot.plot_q_values(
