@@ -21,6 +21,7 @@ def calculate_zmp_trajectory(model, q, qdot, qddot, chest):
         M_ext = tau[3:6]
 
         # Calculate ZMP relative to CoM
+        # TODO do we have to map it to the CoM?
         _zmp = 1 / (F_ext[2]) * np.array([-M_ext[1], M_ext[0], 0])
 
         # Calculate CoM position and transform to ZMP world coordinate
