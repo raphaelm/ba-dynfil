@@ -102,7 +102,7 @@ def get_Euler_from_matrix(R, order):
     else:
         raise NotImplementedError()
 
-    return None
+    return angles
 
 
 # ------------------------------------------------------------------------------
