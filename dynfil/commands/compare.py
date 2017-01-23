@@ -1,8 +1,6 @@
 import os
 
 import click
-import numpy as np
-import rbdl
 
 from dynfil import constants, kinematics
 from dynfil.commands import main
@@ -27,32 +25,42 @@ def compare_interpolation(ctx, ik_method):
     # initial pose: half-sitting
     q_ini = constants.POSE_HALF_SITTING
 
-    with status('Inverse Kinematics with interpolation'):
+    with status('Inverse Kinematics without interpolation'):
         q_calc_raw, qdot_calc_raw, qddot_calc_raw = kinematics.inverse_with_derivatives(
-            model, q_ini, chest, lsole, rsole, timesteps, interpolate=True, method=ik_method
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='none', method=ik_method
         )
 
-    with status('Inverse Kinematics without interpolation'):
+    with status('Inverse Kinematics with poly interpolation'):
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
-            model, q_ini, chest, lsole, rsole, timesteps, interpolate=False, method=ik_method
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='poly', method=ik_method
+        )
+
+    with status('Inverse Kinematics with savgol interpolation'):
+        q_calc_sg, qdot_calc_sg, qddot_calc_sg = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
         )
 
     # Generate plots
     with status('Generate plots'):
         plot.plot_q_interpolation(
             timesteps, q_calc_raw, q_calc, name='qdot',
-            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_q.pdf'),
-            title='Interpolation results q'
+            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_poly_q.pdf'),
+            title='Interpolation results q (polynoms)'
         )
         plot.plot_q_interpolation(
             timesteps, qdot_calc_raw, qdot_calc, name='qdot',
-            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_qdot.pdf'),
-            title='Interpolation results qdot'
+            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_poly_qdot.pdf'),
+            title='Interpolation results qdot (polynoms)'
         )
         plot.plot_q_interpolation(
             timesteps, qddot_calc_raw, qddot_calc, name='qddot',
-            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_qddot.pdf'),
-            title='Interpolation results qddot'
+            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_poly_qddot.pdf'),
+            title='Interpolation results qddot (polynoms)'
+        )
+        plot.plot_q_interpolation(
+            timesteps, qddot_calc_raw, qddot_calc_sg, name='qddot',
+            limit=5, filename=os.path.join(ctx.obj['out_dir'], 'compare_interpol_savgol_qddot.pdf'),
+            title='Interpolation results qddot (savgol)'
         )
 
     if ctx.obj['show']:

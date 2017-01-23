@@ -1,5 +1,6 @@
 import numpy as np
 import rbdl
+from scipy.signal import savgol_filter
 
 from dynfil.utils.angles import euler_from_matrix
 
@@ -72,7 +73,7 @@ def inverse(model, q_ini, chest, lsole, rsole, method='numerical'):
         return inverse_analytical(model, q_ini, chest, lsole, rsole)
 
 
-def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='numerical', interpolate=False):
+def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='numerical', interpolate='none'):
     """
     Like inverse(), but returns a tuple of (q, qdot, qddot)
     """
@@ -83,11 +84,15 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='n
 
     qdot = np.zeros((len(q), model.qdot_size))
     qddot = np.zeros((len(q), model.qdot_size))
-    interpolate_range = 4
-    interpolate_degree = 5
+
+    poly_range = 4
+    poly_degree = 5
+    savgol_window_size = 101
+    savgol_poly_order = 3
+    savgol_mode = "interp"
 
     for t in range(len(q)):  # Iterate over timesteps
-        if t < interpolate_range or not interpolate:
+        if t < poly_range or interpolate != 'poly':
             # First values: Take naive finite differences
             if t > 0 and times[t] > times[t - 1]:
                 qdot[t] = (q[t] - q[t - 1]) / (times[t] - times[t - 1])
@@ -97,16 +102,16 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='n
         else:
             # Use polynomial interpolation between values
             p = np.polyfit(
-                times[t - interpolate_range:t + interpolate_range],
-                q[t - interpolate_range:t + interpolate_range],
-                interpolate_degree
+                times[t - poly_range:t + poly_range],
+                q[t - poly_range:t + poly_range],
+                poly_degree
             )
             h = 0.0001
 
             qdot[t] = (np.polyval(p, times[t]) - np.polyval(p, times[t] - h)) / h
 
     for t in range(len(q)):
-        if t < interpolate_range or not interpolate:
+        if t < poly_range or interpolate != 'poly':
             # First values: Take naive finite differences
             if t > 1 and times[t] > times[t - 1]:
                 qddot[t] = (qdot[t] - qdot[t - 1]) / (times[t] - times[t - 1])
@@ -116,13 +121,18 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='n
         else:
             # Use polynomial interpolation between values
             p = np.polyfit(
-                times[t - interpolate_range:t + interpolate_range],
-                qdot[t - interpolate_range:t + interpolate_range],
-                interpolate_degree
+                times[t - poly_range:t + poly_range],
+                qdot[t - poly_range:t + poly_range],
+                poly_degree
             )
             h = 0.0001
 
             qddot[t] = (np.polyval(p, times[t]) - np.polyval(p, times[t] - h)) / h
+
+    if interpolate == 'savgol':
+        for i in range(len(qddot[0])):
+            filtered = savgol_filter(qddot[:, i], savgol_window_size, savgol_poly_order, mode=savgol_mode)
+            qddot[:, i] = filtered
 
     return q, qdot, qddot
 
