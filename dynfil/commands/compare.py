@@ -70,12 +70,12 @@ def compare_ik(ctx):
     q_ini = constants.POSE_HALF_SITTING
 
     with status('Run numerical IK'):
-        q_calc, qdot_calc, qddot_calc = kinematics.inverse(
+        q_calc = kinematics.inverse(
             model, q_ini, chest, lsole, rsole, timesteps, method='numerical'
         )
 
     with status('Run analytical IK'):
-        q_calc_a, qdot_calc_a, qddot_calc_a = kinematics.inverse(
+        q_calc_a = kinematics.inverse(
             model, q_ini, chest, lsole, rsole, timesteps, method='analytical'
         )
 

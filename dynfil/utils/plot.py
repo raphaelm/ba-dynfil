@@ -138,7 +138,8 @@ def plot_q_values(times, q, labels, filename=None, title=None):
         ax.set_title('$q_{%d}$' % i)
 
         for k in range(len(q)):
-            ax.plot(times, q[k][:,i], label=labels[k], marker='x', markersize=2)
+            traj = np.array([v.tolist() for v in q[k]])
+            ax.plot(times, traj[:, i], label=labels[k], marker='x', markersize=2)
 
         if i == 0:
             ax.legend()
