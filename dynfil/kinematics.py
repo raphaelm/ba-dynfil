@@ -1,6 +1,8 @@
 import numpy as np
 import rbdl
 
+from dynfil.utils.angles import euler_from_matrix
+
 
 def com_trajectory(model, chest, q):
     com = np.zeros((len(q), 3))
@@ -60,7 +62,7 @@ def inverse_numerical(model, q_ini, chest, lsole, rsole):
     return q
 
 
-def inverse(model, q_ini, chest, lsole, rsole, times, method='numerical'):
+def inverse(model, q_ini, chest, lsole, rsole, method='numerical'):
     """
     Like inverse(), but returns a tuple of (q, qdot, qddot)
     """
@@ -149,14 +151,17 @@ def inverse_analytical(model, q_ini, chest, lsole, rsole):
         ('torso_2', float),
         ('chest', float),
     ])
-    move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
+    #move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
 
     for t in range(len(q)):
         # TODO: Center of mass corrections!
         q[t].root_link_x = chest.traj_pos[t][0]
         q[t].root_link_y = chest.traj_pos[t][1]
         q[t].root_link_z = chest.traj_pos[t][2]
-        # TODO: root_link rotations
+
+        q[t].root_link_rx, q[t].root_link_ry, q[t].root_link_rz = euler_from_matrix(chest.traj_ort[t], "123")
+
+        #r = np.transpose(rsole.traj_ort[t]).dot( chest.traj_pos[t] + chest.traj_ort[t].dot(np.transpose(np.array([0, D, 0]))) - rsole.traj_pos[t])
 
         q[t].l_hip_1 = 0
 

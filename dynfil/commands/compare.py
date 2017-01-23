@@ -1,6 +1,8 @@
 import os
 
 import click
+import numpy as np
+import rbdl
 
 from dynfil import constants, kinematics
 from dynfil.commands import main
@@ -71,12 +73,12 @@ def compare_ik(ctx):
 
     with status('Run numerical IK'):
         q_calc = kinematics.inverse(
-            model, q_ini, chest, lsole, rsole, timesteps, method='numerical'
+            model, q_ini, chest, lsole, rsole, method='numerical'
         )
 
     with status('Run analytical IK'):
         q_calc_a = kinematics.inverse(
-            model, q_ini, chest, lsole, rsole, timesteps, method='analytical'
+            model, q_ini, chest, lsole, rsole, method='analytical'
         )
 
     # Generate plots
