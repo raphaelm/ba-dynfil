@@ -73,7 +73,7 @@ def runningMeanFast(x, N, mode):
 
 if __name__ == "__main__":
     # retrieve data
-    data = np.genfromtxt('q_calc.txt', delimiter=", ", dtype=None)
+    data = np.genfromtxt('out/q_calc.txt', delimiter=", ", dtype=None)
     ts, qs = data[1:, 0].copy(), data[1:, 1:].copy()  # remove first entry
     ts, idx, cnt = np.unique(ts, return_index=True, return_counts=True)
     cnt = (cnt - 1).sum()
@@ -81,11 +81,11 @@ if __name__ == "__main__":
         print "ts: removed {} duplicate values".format(cnt)
     qs = qs[idx, :]
 
-    data = np.genfromtxt('qdot_calc.txt', delimiter=", ", dtype=None)
+    data = np.genfromtxt('out/qdot_calc.txt', delimiter=", ", dtype=None)
     qds = data[1:, 1:].copy()  # remove first entry
     qds = qds[idx, :]
 
-    data = np.genfromtxt('qddot_calc.txt', delimiter=", ", dtype=None)
+    data = np.genfromtxt('out/qddot_calc.txt', delimiter=", ", dtype=None)
     qdds = data[1:, 1:].copy()  # remove first entry
     qdds = qdds[idx, :]
 
