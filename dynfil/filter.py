@@ -3,8 +3,7 @@ import numpy as np
 from . import zmp, kinematics
 
 
-def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times,
-                  ik=kinematics.inverse_with_derivatives):
+def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times, ik_method):
     """
     Calculate the Jacobian of r_ZMP(c) for every timestep in the trajectory.
     """
@@ -24,8 +23,8 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times,
         chest_modified = chest.copy()
         chest_modified.traj_pos += h_vec
 
-        q_calc, qdot_calc, qddot_calc = ik(
-            model, q_ini, chest_modified, lsole, rsole, times
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest_modified, lsole, rsole, times, method=ik_method
         )
         zmp_calc_second = zmp.calculate_zmp_trajectory(
             model, q_calc, qdot_calc, qddot_calc, chest_modified
@@ -37,8 +36,7 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times,
 
 
 def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5,
-                            ik=kinematics.inverse_with_derivatives,
-                            status_update=lambda i, n: None):
+                            ik_method='numerical', status_update=lambda i, n: None):
     """
     Applies the dynamic filter using Newton-Raphson iterations and numerical derivatives.
     (See Algorithm 2.2 in thesis)
@@ -48,8 +46,8 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
     for i in range(iterations):
         status_update(i + 1, iterations)
 
-        q_calc, qdot_calc, qddot_calc = ik(
-            model, q_ini, chest, lsole, rsole, times
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, times, method=ik_method
         )
         zmp_calc = zmp.calculate_zmp_trajectory(
             model, q_calc, qdot_calc, qddot_calc, chest
@@ -57,7 +55,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
         zmp_diff = zmp_calc - zmp_ref
 
         # Calculate jacobians
-        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times, ik)
+        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times, ik_method)
 
         for t in range(len(chest)):  # Iterate over timesteps
             # One Newton iteration:
@@ -72,7 +70,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
 
 def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                         ik=kinematics.inverse_with_derivatives, iterations=5,
+                         ik_method, iterations=5,
                          status_update=lambda i, n: None):
     """
     Applies the dynamic filter using Gauss-Newton minimization
@@ -82,8 +80,8 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     for i in range(iterations):
         status_update(i + 1, iterations)
 
-        q_calc, qdot_calc, qddot_calc = ik(
-            model, q_ini, chest, lsole, rsole, times
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, times, method=ik_method
         )
         zmp_calc = zmp.calculate_zmp_trajectory(
             model, q_calc, qdot_calc, qddot_calc, chest
@@ -91,7 +89,7 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         zmp_diff = zmp_calc - zmp_ref
 
         # Calculate jacobians
-        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times)
+        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times, ik_method)
 
         for t in range(len(chest)):  # Iterate over timesteps
             # One Gauss-Newton iteration: x -= (A^T A)^-1 A^T b
@@ -117,7 +115,7 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
 
 
 def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                            ik=kinematics.inverse_with_derivatives, iterations=5,
+                            ik_method, iterations=5,
                             status_update=lambda i, n: None):
     """
     Applies the dynamic filter using steepest descent minimization
@@ -126,7 +124,7 @@ def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     for i in range(iterations):
         status_update(i + 1, iterations)
 
-        q_calc, qdot_calc, qddot_calc = ik(
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
             model, q_ini, chest, lsole, rsole, times
         )
         zmp_calc = zmp.calculate_zmp_trajectory(
@@ -135,7 +133,7 @@ def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         zmp_diff = zmp_calc - zmp_ref
 
         # Calculate jacobians
-        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times)
+        jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times, ik_method)
         gradients = np.zeros((len(times), 2))
 
         for t in range(len(chest)):  # Iterate over timesteps

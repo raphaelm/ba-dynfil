@@ -35,7 +35,7 @@ def move_chest_body_to_com(model, q_ini, chest, lsole, rsole, trials=10):
         chest.body_point = com_real
 
 
-def inverse(model, q_ini, chest, lsole, rsole):
+def inverse_numerical(model, q_ini, chest, lsole, rsole):
     """
     Calculate the Inverse kinematics. Returns trajectories for q.
     """
@@ -48,7 +48,7 @@ def inverse(model, q_ini, chest, lsole, rsole):
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.lmbda = 1e-4
 
-        if t == 0:
+        if t == 0: # TODO:  ??
             move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
 
         cs.AddFullConstraint(*chest.to_constraint(t))
@@ -60,11 +60,24 @@ def inverse(model, q_ini, chest, lsole, rsole):
     return q
 
 
-def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, interpolate=False):
+def inverse(model, q_ini, chest, lsole, rsole, times, method='numerical'):
     """
     Like inverse(), but returns a tuple of (q, qdot, qddot)
     """
-    q = inverse(model, q_ini, chest, lsole, rsole)
+    if method == 'numerical':
+        return inverse_numerical(model, q_ini, chest, lsole, rsole)
+    else:
+        return inverse_analytical(model, q_ini, chest, lsole, rsole)
+
+
+def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='numerical', interpolate=False):
+    """
+    Like inverse(), but returns a tuple of (q, qdot, qddot)
+    """
+    if method == 'numerical':
+        q = inverse_numerical(model, q_ini, chest, lsole, rsole)
+    else:
+        q = inverse_analytical(model, q_ini, chest, lsole, rsole)
 
     qdot = np.zeros((len(q), model.qdot_size))
     qddot = np.zeros((len(q), model.qdot_size))
@@ -110,3 +123,41 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, interpola
             qddot[t] = (np.polyval(p, times[t]) - np.polyval(p, times[t] - h)) / h
 
     return q, qdot, qddot
+
+
+def inverse_analytical(model, q_ini, chest, lsole, rsole):
+    q = np.recarray((len(chest),), dtype=[
+        ('root_link_x', float),
+        ('root_link_y', float),
+        ('root_link_z', float),
+        ('root_link_rx', float),
+        ('root_link_ry', float),
+        ('root_link_rz', float),
+        ('l_hip_1', float),
+        ('l_hip_2', float),
+        ('l_upper_leg', float),
+        ('l_lower_leg', float),
+        ('l_ankle_1', float),
+        ('l_ankle_2', float),
+        ('r_hip_1', float),
+        ('r_hip_2', float),
+        ('r_upper_leg', float),
+        ('r_lower_leg', float),
+        ('r_ankle_1', float),
+        ('r_ankle_2', float),
+        ('torso_1', float),
+        ('torso_2', float),
+        ('chest', float),
+    ])
+    move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
+
+    for t in range(len(q)):
+        # TODO: Center of mass corrections!
+        q[t].root_link_x = chest.traj_pos[t][0]
+        q[t].root_link_y = chest.traj_pos[t][1]
+        q[t].root_link_z = chest.traj_pos[t][2]
+        # TODO: root_link rotations
+
+        q[t].l_hip_1 = 0
+
+    return q

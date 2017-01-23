@@ -29,7 +29,7 @@ PlotResiduum = namedtuple('PlotResiduum', 'times values label color')
 def plot_trajectories(trajectories, filename=None, title=None):
     mpl.rcParams['legend.fontsize'] = 10
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(11.69, 8.27))
     if title:
         fig.suptitle(title)
     ax = fig.gca(projection='3d')
@@ -89,7 +89,7 @@ def plot_trajectories(trajectories, filename=None, title=None):
 
 
 def plot_trajectories_from_top(trajectories, filename=None, title=None):
-    fig = plt.figure()
+    fig = plt.figure(figsize=(11.69, 8.27))
     ax = fig.gca()
     ax.axis('equal')
     if title:
@@ -125,13 +125,41 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
         fig.savefig(filename, dpi=300)
 
 
-def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
+def plot_q_values(times, q, labels, filename=None, title=None):
+    if not isinstance(q, tuple):
+        q = (q,)
+    nplots = len(q[0][0])
+    fig, axes = plt.subplots(int(nplots / 4) + 1, 4, sharex=True, figsize=(8.27, 11.69))
+    if title:
+        fig.suptitle(title)
+
+    for i in range(nplots):
+        ax = axes[int(i / 4)][i % 4]
+        ax.set_title('$q_{%d}$' % i)
+
+        for k in range(len(q)):
+            ax.plot(times, q[k][:,i], label=labels[k], marker='x', markersize=2)
+
+        if i == 0:
+            ax.legend()
+
+    axes[0, 0].set_ylabel('q')
+    axes[-1, 0].set_xlabel('time')
+    axes[-1, 1].set_xlabel('time')
+    axes[-1, 2].set_xlabel('time')
+    axes[-1, 3].set_xlabel('time')
+
+    if filename:
+        fig.savefig(filename, dpi=300)
+
+
+def plot_q_derivs(times, q, qdot, qddot, labels, filename=None, limit=None, title=None):
     if not isinstance(q, tuple):
         q = (q,)
     nplots = len(q[0][0])
     if limit:
         nplots = min(limit, nplots)
-    fig, axes = plt.subplots(nplots, 3, sharex=True)
+    fig, axes = plt.subplots(nplots, 3, sharex=True, figsize=(8.27, 11.69))
     if title:
         fig.suptitle(title)
 
@@ -139,9 +167,12 @@ def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
         ax_q, ax_qdot, ax_qddot = axes[i]
 
         for k in range(len(q)):
-            ax_q.plot(times, q[k][:,i], label=r'$q_{}$'.format(i), marker='x', markersize=2)
-            ax_qdot.plot(times, qdot[k][:,i], label=r'$\dot q_{}$'.format(i), marker='x', markersize=2)
-            ax_qddot.plot(times, qddot[k][:,i], label=r'$\ddot q_{}$'.format(i), marker='x', markersize=2)
+            ax_q.plot(times, q[k][:,i], label=labels[k], marker='x', markersize=2)
+            ax_qdot.plot(times, qdot[k][:,i], label=labels[k], marker='x', markersize=2)
+            ax_qddot.plot(times, qddot[k][:,i], label=labels[k], marker='x', markersize=2)
+
+        if i == 0:
+            ax_q.legend()
 
     axes[0, 0].set_title('q')
     axes[0, 1].set_title('qdot')
@@ -150,6 +181,7 @@ def plot_q_values(times, q, qdot, qddot, filename=None, limit=None, title=None):
     axes[-1, 1].set_xlabel('time')
     axes[-1, 2].set_xlabel('time')
 
+    fig.tight_layout()
     if filename:
         fig.savefig(filename, dpi=300)
 
@@ -158,7 +190,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
     nplots = len(data_with[0])
     if limit:
         nplots = min(limit, nplots)
-    fig, axes = plt.subplots(nplots, 2, sharex=True)
+    fig, axes = plt.subplots(nplots, 2, sharex=True, figsize=(8.27, 11.69))
     if title:
         fig.suptitle(title)
 
@@ -176,7 +208,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
 
 
 def plot_residuums(data, filename=None, title=None):
-    fig, axes = plt.subplots(len(data), 3)
+    fig, axes = plt.subplots(len(data), 3, figsize=(11.69, 8.27))
     if title:
         fig.suptitle(title)
 
