@@ -9,7 +9,7 @@ from dynfil.utils.cli import status
 @click.group()
 @click.option('--model', default='data/models/iCubHeidelberg01_new_legs.urdf', help='Model file')
 @click.option('--trajectory', required=True, help='Trajectory file')
-@click.option('--csv-delim', default=',', help='CSV delimiter of trajectory file')
+@click.option('--csv-delim', default=' ', help='CSV delimiter of trajectory file')
 @click.option('--out-dir', default='out/', help='Output directory')
 @click.option('--show', is_flag=True, help='Open plot windows')
 @click.pass_context
