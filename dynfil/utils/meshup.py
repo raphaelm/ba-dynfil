@@ -25,7 +25,6 @@ torso_1:R:X:rad,
 torso_2:R:-Z:rad,
 chest:R:-Y:rad
 
-
 DATA:
 """
 
@@ -37,3 +36,13 @@ def save_to_meshup(filename, timesteps, q):
     meshup_data[:, 0] = timesteps
     meshup_data[:, 1:] = q
     np.savetxt(filename, meshup_data, fmt="%.18f", delimiter=", ", newline="\n", comments="", header=MESHUP_HEADER)
+
+
+def load_from_meshup(filename):
+    skip_header = 0
+    with open(filename, 'r') as f:
+        for i, l in enumerate(f):
+            if 'DATA' in l:
+                skip_header = i + 1
+                break
+    return np.genfromtxt(filename, delimiter=",", dtype=float, skip_header=skip_header)

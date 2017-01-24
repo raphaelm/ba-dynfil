@@ -142,7 +142,7 @@ def plot_q_values(times, q, labels, filename=None, title=None):
             ax.plot(times, traj[:, i], label=labels[k], marker='x', markersize=2)
 
         if i == 0:
-            ax.legend()
+            ax.legend(loc='upper left')
 
     axes[0, 0].set_ylabel('q')
     axes[-1, 0].set_xlabel('time')
