@@ -3,7 +3,7 @@ import numpy as np
 
 POSE_HALF_SITTING = np.array([
     0.063, 0, 0.605,  # x, y, z
-    0, 0.25, np.pi,  # Euler x, y, z
+    0, 0.25, 0,  # Euler x, y, z
     0.5, 0,  # l_hip x, -z
     0,  # l_up y
     -0.5,  # l_lo x

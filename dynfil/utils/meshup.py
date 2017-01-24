@@ -3,11 +3,11 @@ import numpy as np
 MESHUP_HEADER = """
 COLUMNS:
 time,
-root_link:T:X,
-root_link:T:Y,
+root_link:T:-X,
+root_link:T:-Y,
 root_link:T:Z,
-root_link:R:X:rad,
-root_link:R:Y:rad,
+root_link:R:-X:rad,
+root_link:R:-Y:rad,
 root_link:R:Z:rad,
 l_hip_1:R:X:rad,
 l_hip_2:R:-Z:rad,
@@ -24,6 +24,7 @@ r_ankle_2:R:-Z:rad
 torso_1:R:X:rad,
 torso_2:R:-Z:rad,
 chest:R:-Y:rad
+
 
 DATA:
 """

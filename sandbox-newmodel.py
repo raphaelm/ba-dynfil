@@ -19,16 +19,16 @@ chest.set_trajectories(pgdata[3:4, 1:4], pgdata[3:4, 4:7], offset_angles)
 lsole = BodyTrajectory(model, model.GetBodyId("l_sole"))
 rsole = BodyTrajectory(model, model.GetBodyId("r_sole"))
 
-offset_angles = np.array([0, 0., 0.])
-lsole.set_trajectories(pgdata[3:4, 7:10], pgdata[3:4, 10:13], offset_angles)
-rsole.set_trajectories(pgdata[3:4, 13:16], pgdata[3:4, 16:19], offset_angles)
+offset_angles = np.array([0, 0., np.pi])
+rsole.set_trajectories(pgdata[3:4, 7:10], pgdata[3:4, 10:13], offset_angles)
+lsole.set_trajectories(pgdata[3:4, 13:16], pgdata[3:4, 16:19], offset_angles)
 
 cs = rbdl.InverseKinematicsConstraintSet()
 cs.lmbda = 1e-4
 
 cs.AddFullConstraint(*chest.to_constraint(0))
 cs.AddFullConstraint(*lsole.to_constraint(0))
-#cs.AddFullConstraint(*rsole.to_constraint(0))
+cs.AddFullConstraint(*rsole.to_constraint(0))
 
 q = rbdl.InverseKinematics(model, POSE_HALF_SITTING, cs)
 
