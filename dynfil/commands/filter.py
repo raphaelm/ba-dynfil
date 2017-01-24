@@ -16,7 +16,7 @@ from dynfil.utils.meshup import save_to_meshup
               help='Filter method', default='newton')
 @click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
               help='IK method', default='numerical')
-@click.option('--iterations', type=click.IntRange(1, 100), default=5, help='Number of filter iterations')
+@click.option('--iterations', type=click.IntRange(0, 100), default=5, help='Number of filter iterations')
 @click.option('--interpolate', type=click.Choice(['none', 'poly', 'savgol']), default='none',
               help='Apply interpolation')
 def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
@@ -71,7 +71,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
     # Calculate ZMP from filtered result
     with status('Calculate ZMP from filtered data'):
         q_filtered, qdot_filtered, qddot_filtered = kinematics.inverse_with_derivatives(
-            model, q_ini, chest_filtered, lsole, rsole, timesteps, method=ik_method
+            model, q_ini, chest_filtered, lsole, rsole, timesteps, interpolate=interpolate, method=ik_method
         )
         zmp_filtered = zmp.calculate_zmp_trajectory(model, q_filtered, qdot_filtered, qddot_filtered, chest_filtered)
 
