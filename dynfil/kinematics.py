@@ -50,7 +50,6 @@ def inverse_numerical(model, q_ini, chest, lsole, rsole):
 
     q = np.zeros((len(chest), model.qdot_size))
     for t in range(len(chest)):  # Iterate over timesteps
-        # Calculate q using rbdl
         q_before = q[t - 1] if t > 0 else q_ini
 
         if t == 0:
