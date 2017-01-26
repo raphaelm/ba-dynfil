@@ -25,7 +25,7 @@ def move_chest_body_to_com(model, q_ini, chest, lsole, rsole, trials=10):
     """
     for i in range(trials):
         cs = rbdl.InverseKinematicsConstraintSet()
-        cs.lmbda = 1e-4
+        cs.damper = 1e-4
         cs.AddFullConstraint(*chest.to_constraint(0))
         cs.AddFullConstraint(*lsole.to_constraint(0))
         cs.AddFullConstraint(*rsole.to_constraint(0))
@@ -34,8 +34,7 @@ def move_chest_body_to_com(model, q_ini, chest, lsole, rsole, trials=10):
 
         com_tmp = np.zeros(3)
         rbdl.CalcCenterOfMass(model, q_ini, np.zeros(model.dof_count), com_tmp)
-        com_real = rbdl.CalcBaseToBodyCoordinates(model, q_ini, chest.id, com_tmp)
-        chest.body_point = com_real
+        chest.body_point = rbdl.CalcBaseToBodyCoordinates(model, q_ini, chest.id, com_tmp)
 
 
 def inverse_numerical(model, q_ini, chest, lsole, rsole):
@@ -45,20 +44,28 @@ def inverse_numerical(model, q_ini, chest, lsole, rsole):
     if len(chest) != len(lsole) or len(chest) != len(rsole):
         raise ValueError('Trajectories are not of same length.')
 
+    com_tmp = np.zeros(3)
+    rbdl.CalcCenterOfMass(model, q_ini, np.zeros(model.dof_count), com_tmp)
+    chest.body_point = rbdl.CalcBaseToBodyCoordinates(model, q_ini, chest.id, com_tmp)
+
     q = np.zeros((len(chest), model.qdot_size))
     for t in range(len(chest)):  # Iterate over timesteps
         # Calculate q using rbdl
+        q_before = q[t - 1] if t > 0 else q_ini
+
+        if t == 0:
+            move_chest_body_to_com(model, q_before, chest, lsole, rsole)
+
+        com_tmp = np.zeros(3)
+        rbdl.CalcCenterOfMass(model, q_before, np.zeros(model.dof_count), com_tmp)
+        chest.body_point = rbdl.CalcBaseToBodyCoordinates(model, q_before, chest.id, com_tmp)
         cs = rbdl.InverseKinematicsConstraintSet()
-        cs.lmbda = 1e-4
-
-        if t == 0: # TODO:  ??
-            move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
-
+        cs.damper = 1e-4
         cs.AddFullConstraint(*chest.to_constraint(t))
         cs.AddFullConstraint(*lsole.to_constraint(t))
         cs.AddFullConstraint(*rsole.to_constraint(t))
         # TODO check for convergence?
-        q[t] = rbdl.InverseKinematics(model, q[t - 1] if t > 0 else q_ini, cs)
+        q[t] = rbdl.InverseKinematics(model, q_before, cs)
 
     return q
 
