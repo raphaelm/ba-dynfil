@@ -20,7 +20,7 @@ r_hip_2:R:-Z:rad,
 r_upper_leg:R:-Y:rad,
 r_lower_leg:R:-X:rad,
 r_ankle_1:R:X:rad,
-r_ankle_2:R:-Z:rad
+r_ankle_2:R:-Z:rad,
 torso_1:R:X:rad,
 torso_2:R:-Z:rad,
 chest:R:-Y:rad
