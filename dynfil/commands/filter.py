@@ -12,7 +12,7 @@ from dynfil.utils.meshup import save_to_meshup
 
 @main.main.command(name='filter')
 @click.pass_context
-@click.option('--filter-method', type=click.Choice(['newton', 'leastsquares', 'steepestdescent']),
+@click.option('--filter-method', type=click.Choice(['newton', 'leastsquares', 'steepestdescent', 'pc']),
               help='Filter method', default='newton')
 @click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
               help='IK method', default='numerical')
@@ -61,6 +61,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             'leastsquares': filter.dynfil_least_squares,
             'newton': filter.dynfil_newton_numerical,
             'steepestdescent': filter.dynfil_gradient_descent,
+            'pc': filter.dynfil_preview_control,
         }
         chest_filtered = filters[filter_method](
             chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
