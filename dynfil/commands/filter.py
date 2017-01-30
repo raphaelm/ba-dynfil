@@ -58,7 +58,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
     # Apply dynamic filter
     with status('Apply dynamic filter') as status_update:
         filters = {
-            'least_squares': filter.dynfil_least_squares,
+            'leastsquares': filter.dynfil_least_squares,
             'newton': filter.dynfil_newton_numerical,
             'steepestdescent': filter.dynfil_gradient_descent,
         }
