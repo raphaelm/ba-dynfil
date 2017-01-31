@@ -5,10 +5,10 @@ import numpy as np
 from dynfil.utils import plot
 from dynfil.utils.linalg import tridag
 
-STEP_LENGTH = 0.2172 * 0.7  # 70% of foot length
+STEP_LENGTH = 0.2172 * 0.5  # 50% of foot length
 STEP_SINGLE_SUPPORT_TIME = 0.7
 STEP_DOUBLE_SUPPORT_TIME = 0.7
-FOOT_DISTANCE = 0.5
+FOOT_DISTANCE = 0.075 * 2
 N_STEPS = 6
 RESOLUTION = 0.001
 COM_HEIGHT = 0.444239

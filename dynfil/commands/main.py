@@ -4,6 +4,7 @@ import rbdl
 import warnings
 
 from dynfil.bodies import BodyTrajectory
+from dynfil.kinematics import IKConvergenceWarning
 from dynfil.utils.cli import status
 
 
@@ -24,7 +25,9 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
     model = rbdl.loadModel(model)
 
     if not w:
-        warnings.simplefilter("ignore")
+        warnings.simplefilter("ignore", IKConvergenceWarning)
+    else:
+        warnings.simplefilter("once", IKConvergenceWarning)
 
     # Load data from file
     with status('Loading data'):
