@@ -125,6 +125,52 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
         fig.savefig(filename, dpi=300)
 
 
+def plot_trajectories_1d(times, trajectories, filename=None, title=None):
+    fig = plt.figure(figsize=(11.69, 8.27))
+    ax = fig.gca()
+    if title:
+        fig.suptitle(title)
+    for traj in trajectories:
+        if isinstance(traj, PlotTrajectory):
+            ax.plot(times, traj.positions, label=traj.label)
+
+    leg = ax.legend()
+    for legobj in leg.legendHandles:
+        legobj.set_linewidth(5.0)
+    ax.set_xlabel('t')
+    ax.set_ylabel('y')
+    if filename:
+        fig.savefig(filename, dpi=300)
+
+
+def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
+    fig, axes = plt.subplots(3, len(trajectories), sharex=True, sharey='row', figsize=(8.27, 11.69))
+    if title:
+        fig.suptitle(title)
+    for i, traj in enumerate(trajectories):
+        if isinstance(traj, PlotTrajectory):
+            if len(trajectories) > 1:
+                a = axes[:, i]
+            else:
+                a = axes
+            a[0].plot(times, traj.positions[:, 0], label='x', color=traj.color)
+            a[1].plot(times, traj.positions[:, 1], label='y', color=traj.color)
+            a[2].plot(times, traj.positions[:, 2], label='z', color=traj.color)
+            a[0].set_title(traj.label)
+            if i == 0:
+                a[0].set_ylabel('x')
+                a[1].set_ylabel('y')
+                a[2].set_ylabel('z')
+
+    if len(trajectories) > 1:
+        for i in range(len(trajectories)):
+            axes[-1, i].set_xlabel('t')
+    else:
+        axes[-1].set_label('t')
+    if filename:
+        fig.savefig(filename, dpi=300)
+
+
 def plot_q_values(times, q, labels, filename=None, title=None):
     if not isinstance(q, tuple):
         q = (q,)
