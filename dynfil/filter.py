@@ -219,7 +219,7 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             # Limit preview window as we cannot access values after the end of the motion
             preview_size = min(N, len(chest) - t - 1)
 
-            u = np.zeros(3)
+            u = np.zeros(2)
             for i in range(2):
                 # eq (4.74) from p. 144 in Kajita's book
                 #u[i] = - K.dot(zmp_diff[t, i])[0,0] + f[:preview_size].dot(zmp_ref[t + 1:t + preview_size + 1, i].T)

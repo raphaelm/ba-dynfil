@@ -63,6 +63,9 @@ def inverse_numerical(model, q_ini, chest, lsole, rsole):
         cs.AddFullConstraint(*chest.to_constraint(t))
         cs.AddFullConstraint(*lsole.to_constraint(t))
         cs.AddFullConstraint(*rsole.to_constraint(t))
+
+        # TODO: cs will have member "e" with the residuum. plot and compare to tolerance
+
         # TODO check for convergence?
         q[t] = rbdl.InverseKinematics(model, q_before, cs)
 
