@@ -1,8 +1,13 @@
 import numpy as np
 import rbdl
+import warnings
 from scipy.signal import savgol_filter
 
 from dynfil.utils.angles import euler_from_matrix
+
+
+class IKConvergenceWarning(UserWarning):
+    pass
 
 
 def com_trajectory(model, chest, q):
@@ -68,6 +73,9 @@ def inverse_numerical(model, q_ini, chest, lsole, rsole):
 
         # TODO check for convergence?
         q[t] = rbdl.InverseKinematics(model, q_before, cs)
+
+        if (cs.e > 1e-12).any():
+            warnings.warn("IK error > tolerance: {}".format(cs.e), IKConvergenceWarning)
 
     return q
 

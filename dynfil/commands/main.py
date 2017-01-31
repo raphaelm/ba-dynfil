@@ -1,6 +1,7 @@
 import click
 import numpy as np
 import rbdl
+import warnings
 
 from dynfil.bodies import BodyTrajectory
 from dynfil.utils.cli import status
@@ -12,14 +13,18 @@ from dynfil.utils.cli import status
 @click.option('--csv-delim', default=' ', help='CSV delimiter of trajectory file')
 @click.option('--out-dir', default='out/', help='Output directory')
 @click.option('--show', is_flag=True, help='Open plot windows')
+@click.option('-w/--show-warnings', is_flag=True, help='Show warnings')
 @click.pass_context
-def main(ctx, model, trajectory, out_dir, show, csv_delim):
+def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
     click.echo(click.style('Model:            {}'.format(model), fg='blue'))
     click.echo(click.style('Trajectory:       {}'.format(trajectory), fg='blue'))
     click.echo(click.style('Output directory: {}'.format(out_dir), fg='blue'))
     click.echo()
 
     model = rbdl.loadModel(model)
+
+    if not w:
+        warnings.simplefilter("ignore")
 
     # Load data from file
     with status('Loading data'):
