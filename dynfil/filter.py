@@ -1,6 +1,6 @@
 import numpy as np
 
-from .previewcontrol import preview_control
+from .previewcontrol import online_preview_control
 from . import zmp, kinematics
 
 
@@ -185,7 +185,7 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         )
         zmp_diff = zmp_calc - zmp_ref
 
-        chest_traj = preview_control(zmp_diff, t_step, z_c, len(chest))
+        chest_traj = online_preview_control(zmp_diff, t_step, z_c, len(chest))
         chest.traj_pos -= chest_traj
 
     return chest

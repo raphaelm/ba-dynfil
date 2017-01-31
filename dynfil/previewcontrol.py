@@ -2,7 +2,7 @@ import numpy as np
 import scipy.linalg
 
 
-def preview_control(zmp_ref, t_step, z_c, traj_length):
+def online_preview_control(zmp_ref, t_step, z_c, traj_length):
     """
     Preview control algorithm, one iteration. Notation from Kajita book (2004), page 143 ff.
 
