@@ -135,6 +135,16 @@ b[t-1] += c[-1]
 com = tridag(a, b, c, zmp)
 com[:, 2] = np.ones(t) * COM_HEIGHT
 
+# Save to file
+filedata = np.zeros((t, 23))
+filedata[:, 0] = timesteps
+filedata[:, 1:4] = com
+filedata[:, 7:10] = lfoot
+filedata[:, 13:16] = rfoot
+filedata[:, 19:22] = zmp
+np.savetxt('out/pg_data.txt', filedata, delimiter=' ')
+
+
 # Plots
 plot.plot_trajectories_1d_axis(
     timesteps[:t],
