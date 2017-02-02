@@ -34,7 +34,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
     zmp_ref = ctx.obj['zmp_ref']
 
     # initial pose: half-sitting
-    q_ini = constants.POSE_HALF_SITTING
+    q_ini = constants.POSE_WALK_INITIAL
 
     # First ZMP calculation
     with status('Calculate ZMP from forward run'):
