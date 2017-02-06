@@ -2,16 +2,17 @@ import os
 
 import numpy as np
 
+from dynfil.previewcontrol import online_preview_control
 from dynfil.utils import plot
 from dynfil.utils.linalg import tridag
 
-STEP_LENGTH = 0.2172 * 0.5  # 50% of foot length
+STEP_LENGTH = 0.2  # HeiCub: 0.2172 * 0.5  # 50% of foot length
 STEP_SINGLE_SUPPORT_TIME = 0.7
 STEP_DOUBLE_SUPPORT_TIME = 0.7
-FOOT_DISTANCE = 0.075 * 2
+FOOT_DISTANCE = 0.25 * 2  # HeiCub: 0.075 * 2
 N_STEPS = 6
 RESOLUTION = 0.001
-COM_HEIGHT = 0.444239
+COM_HEIGHT = 0.60  # HeiCub: 0.444239
 GRAVITY = 9.81
 WAIT_TIME = 0.5
 
@@ -182,6 +183,7 @@ b[t-1] += c[-1]
 # Solve eq. (4.69) from p 141 in Kajita's book
 com = tridag(a, b, c, zmp)
 com[:, 2] = np.ones(t) * COM_HEIGHT
+#com = online_preview_control(zmp, RESOLUTION, COM_HEIGHT, len(zmp))
 
 # Save to file
 filedata = np.zeros((t, 29))

@@ -1,6 +1,6 @@
 import numpy as np
 
-MESHUP_HEADER = """
+MESHUP_HEADER_HEICUB = """
 COLUMNS:
 time,
 root_link:T:-X,
@@ -28,14 +28,40 @@ chest:R:-Y:rad
 DATA:
 """
 
+MESHUP_HEADER_SIMPLE = """
+COLUMNS:
+time,
+pelvis:T:X,
+pelvis:T:Y,
+pelvis:T:Z,
+pelvis:R:X:rad,
+pelvis:R:Y:rad,
+pelvis:R:Z:rad,
+hip_right:R:-Z:rad,
+hip_right:R:-X:rad,
+hip_right:R:-Y:rad,
+knee_right:R:Y:rad,
+ankle_right:R:Y:rad,
+ankle_right:R:X:rad,
+hip_left:R:-Z:rad,
+hip_left:R:-X:rad,
+hip_left:R:-Y:rad,
+knee_left:R:Y:rad,
+ankle_left:R:Y:rad,
+ankle_left:R:X:rad
 
-def save_to_meshup(filename, timesteps, q):
+DATA:
+"""
+
+
+def save_to_meshup(filename, timesteps, q, header=MESHUP_HEADER_SIMPLE):
     rows = 2
     ts = np.linspace(0.0, 1.0, rows, endpoint=True)
     meshup_data = np.zeros((q.shape[0], 1 + q.shape[1]))
     meshup_data[:, 0] = timesteps
     meshup_data[:, 1:] = q
-    np.savetxt(filename, meshup_data, fmt="%.18f", delimiter=", ", newline="\n", comments="", header=MESHUP_HEADER)
+    np.savetxt(filename, meshup_data, fmt="%.18f", delimiter=", ", newline="\n", comments="",
+               header=header)
 
 
 def load_from_meshup(filename):
