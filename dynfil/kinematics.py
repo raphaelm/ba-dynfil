@@ -3,7 +3,28 @@ import rbdl
 import warnings
 from scipy.signal import savgol_filter
 
-from dynfil.utils.angles import euler_from_matrix
+from dynfil.utils.angles import euler_from_matrix, rotx, roty
+
+Q_TYPES = [
+    ('pelvis_x', float),
+    ('pelvis_y', float),
+    ('pelvis_z', float),
+    ('pelvis_rx', float),
+    ('pelvis_ry', float),
+    ('pelvis_rz', float),
+    ('r_hip_rz', float),
+    ('r_hip_rx', float),
+    ('r_hip_ry', float),
+    ('r_knee_ry', float),
+    ('r_ankle_ry', float),
+    ('r_ankle_rx', float),
+    ('l_hip_rz', float),
+    ('l_hip_rx', float),
+    ('l_hip_ry', float),
+    ('l_knee_y', float),
+    ('l_ankle_y', float),
+    ('l_ankle_x', float),
+]
 
 
 class IKConvergenceWarning(UserWarning):
@@ -57,8 +78,8 @@ def inverse_numerical(model, q_ini, chest, lsole, rsole):
     for t in range(len(chest)):  # Iterate over timesteps
         q_before = q[t - 1] if t > 0 else q_ini
 
-        if t == 0:
-            move_chest_body_to_com(model, q_before, chest, lsole, rsole)
+        #if t == 0:
+        #    move_chest_body_to_com(model, q_before, chest, lsole, rsole)
 
         com_tmp = np.zeros(3)
         rbdl.CalcCenterOfMass(model, q_before, np.zeros(model.dof_count), com_tmp)
@@ -154,42 +175,90 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='n
     return q, qdot, qddot
 
 
+def inverse_analytical_one_leg(D, A, B, root, foot, t):
+    root_r = root.traj_pos[t]
+    foot_r = foot.traj_pos[t]
+    root_E = root.traj_ort[t]
+    foot_E = foot.traj_ort[t]
+    # Kajitas book, p 53
+    r = foot_E.T.dot(root_r + root_E.dot(D) - foot_r)
+    C = np.linalg.norm(r)
+    c5 = (C**2 - A**2 - B**2) / (2.0*A*B)
+    if c5 >= 1:
+        q5 = 0.0
+    elif c5 <= -1:
+        q5 = np.pi
+    else:
+        q5 = np.arccos(c5)  # knee pitch
+
+    q6a = np.arcsin((A/C)*np.sin(np.pi - q5))  # ankle pitch sub
+
+    q7 = np.arctan2(r[1], r[2])  # ankle roll -pi/2 < q(6) < pi/2
+    if q7 > np.pi/2.:
+        q7 = q7 - np.pi
+    elif q7 < -np.pi/2.:
+        q7 = q7 + np.pi
+
+    # ankle pitch
+    q6 = -np.arctan2(r[0], np.sign(r[2])*np.sqrt(r[1]**2 + r[2]**2)) - q6a
+
+    R = root_E.T.dot(foot_E).dot(rotx(-q7)).dot(roty(-q6 - q5))
+
+    # hip yaw
+    q2 = np.arctan2(-R[0, 1], R[1,1])
+
+    # hip roll
+    cz = np.cos(q2)
+    sz = np.sin(q2)
+    q3 = np.arctan2(R[2, 1], -R[0, 1]*sz + R[1, 1]*cz)
+
+    # hip pitch
+    q4 = np.arctan2(-R[2, 0], R[2, 2])
+
+    q = np.array([q2, q3, q4, q5, q6, q7])
+    qdot = np.array([0, 0, 0, 0, 0, 0])
+    qddot = np.array([0, 0, 0, 0, 0, 0])
+    return q, qdot, qddot
+
+
 def inverse_analytical(model, q_ini, chest, lsole, rsole):
-    q = np.recarray((len(chest),), dtype=[
-        ('root_link_x', float),
-        ('root_link_y', float),
-        ('root_link_z', float),
-        ('root_link_rx', float),
-        ('root_link_ry', float),
-        ('root_link_rz', float),
-        ('l_hip_1', float),
-        ('l_hip_2', float),
-        ('l_upper_leg', float),
-        ('l_lower_leg', float),
-        ('l_ankle_1', float),
-        ('l_ankle_2', float),
-        ('r_hip_1', float),
-        ('r_hip_2', float),
-        ('r_upper_leg', float),
-        ('r_lower_leg', float),
-        ('r_ankle_1', float),
-        ('r_ankle_2', float),
-        ('torso_1', float),
-        ('torso_2', float),
-        ('chest', float),
-    ])
-    #move_chest_body_to_com(model, q_ini, chest, lsole, rsole)
+    q = np.zeros((len(chest), model.q_size))
+    qdot = np.zeros((len(chest), model.qdot_size))
+    qddot = np.zeros((len(chest), model.qdot_size))
+
+    # TODO: Center of mass corrections!
+    rbdl.UpdateKinematics(model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
+
+    root_x = model.X_base[model.GetBodyId("pelvis")]
+    hipr_x = model.X_base[model.GetBodyId("hip_right")]
+    kneer_x = model.X_base[model.GetBodyId("knee_right")]
+    footr_x = model.X_base[model.GetBodyId("ankle_right")]
+    D = hipr_x.r - root_x.r
+    A = np.linalg.norm(hipr_x.r - kneer_x.r)
+    B = np.linalg.norm(kneer_x.r - footr_x.r)
 
     for t in range(len(q)):
-        # TODO: Center of mass corrections!
-        q[t].root_link_x = chest.traj_pos[t][0]
-        q[t].root_link_y = chest.traj_pos[t][1]
-        q[t].root_link_z = chest.traj_pos[t][2]
 
-        q[t].root_link_rx, q[t].root_link_ry, q[t].root_link_rz = euler_from_matrix(chest.traj_ort[t], "123")
+        lq, lqdot, lqddot = inverse_analytical_one_leg(
+            -D, A, B, chest, lsole, t
+        )
+        rq, rqdot, rqddot = inverse_analytical_one_leg(
+            D, A, B, chest, rsole, t
+        )
 
-        #r = np.transpose(rsole.traj_ort[t]).dot( chest.traj_pos[t] + chest.traj_ort[t].dot(np.transpose(np.array([0, D, 0]))) - rsole.traj_pos[t])
+        q[t, 0:3] = chest.traj_pos[t]
+        qdot[t, 0:3] = chest.traj_pos_dot[t]
+        qddot[t, 0:3] = chest.traj_pos_ddot[t]
+        # TDOO: qdot[0:3]
+        # TODO: qddot[0:3]
+        # TODO get Euler angles from matrix => q[3:6]
 
-        q[t].l_hip_1 = 0
+        q[t, 6:12] = rq
+        qdot[t, 6:12] = rqdot
+        qddot[t, 6:12] = rqddot
+
+        q[t, 12:18] = lq
+        qdot[t, 12:18] = lqdot
+        qddot[t, 12:18] = lqddot
 
     return q
