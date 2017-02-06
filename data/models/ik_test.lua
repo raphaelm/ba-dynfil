@@ -113,7 +113,9 @@ joints = {
 colors = {
     color_body = {0.0, 0.0, 1.0},
     color_left = {1.0, 0.0, 0.0},
+    color_left2 = {1.0, 0.2, 0.2},
     color_right = {0.0, 1.0, 0.0},
+    color_right2 = {0.2, 1.0, 0.2},
     -- color_foot = {0.0, 0.0, 1.0}
 }
 
@@ -144,7 +146,7 @@ meshes = {
         dimensions  = {
             constants.thigh_l, constants.thigh_w, constants.thigh_h
         },
-        color       = colors.color_left,
+        color       = colors.color_left2,
         mesh_center = { 0.0, 0.0, 0.0 },
         src         = "meshes/unit_cube.obj",
     },
@@ -158,6 +160,36 @@ meshes = {
         mesh_center = { 0.0, 0.0, 0.0 },
         src         = "meshes/unit_cube.obj",
     },
+    -- THIGH RIGHT
+    thigh_right = {
+        name        = "thigh_right",
+        dimensions  = {
+            constants.thigh_l, constants.thigh_w, constants.thigh_h
+        },
+        color       = colors.color_right,
+        mesh_center = { 0.0, 0.0, 0.0 },
+        src         = "meshes/unit_cube.obj",
+    },
+    -- SHANK RIGHT
+    shank_right = {
+        name        = "shank_right",
+        dimensions  = {
+            constants.thigh_l, constants.thigh_w, constants.thigh_h
+        },
+        color       = colors.color_right2,
+        mesh_center = { 0.0, 0.0, 0.0 },
+        src         = "meshes/unit_cube.obj",
+    },
+    -- FOOT RIGHT
+    foot_right = {
+        name        = "foot_right",
+        dimensions  = {
+            constants.foot_l, constants.foot_w, constants.foot_h
+        },
+        color       = colors.color_right,
+        mesh_center = { 0.0, 0.0, 0.0 },
+        src         = "meshes/unit_cube.obj",
+    }
 }
 
 --[[ Contact Point Definition
@@ -249,7 +281,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.pelvis,
+                meshes.pelvis,
             },
         },
         -- HIP RIGHT: upper part of the leg attached to pelvis via hip
@@ -266,7 +298,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.thigh_right,
+                meshes.thigh_right,
             },
         },
         -- KNEE RIGHT: lower part of the leg attached to thigh via knee
@@ -283,7 +315,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.shank_right,
+                meshes.shank_right,
             },
         },
         -- ANKLE RIGHT: right foot attached to shank via ankle
@@ -300,7 +332,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.foot_right
+                meshes.foot_right
             },
         },
         -- HIP LEFT: upper part of the leg attached to pelvis via hip
@@ -317,7 +349,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.thigh_left,
+                meshes.thigh_left,
             },
         },
         -- KNEE LEFT: lower part of the leg attached to thigh via knee
@@ -334,7 +366,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.shank_left,
+                meshes.shank_left,
             },
         },
         -- ANKLE LEFT: left foot attached to shank via ankle
@@ -351,7 +383,7 @@ model = {
                     },
             },
             visuals = {
-                -- meshes.foot_left
+                meshes.foot_left
             },
         },
     },
