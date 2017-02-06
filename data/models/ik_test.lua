@@ -137,17 +137,17 @@ meshes = {
             constants.thigh_l, constants.thigh_w, constants.thigh_h
         },
         color       = colors.color_left,
-        mesh_center = { 0.0, 0.0, 0.0 },
+        mesh_center = { 0.0, 0.0, -0.5*constants.thigh_h },
         src         = "meshes/unit_cube.obj",
     },
     -- SHANK LEFT
     shank_left = {
         name        = "shank_left",
         dimensions  = {
-            constants.thigh_l, constants.thigh_w, constants.thigh_h
+            constants.shank_l, constants.shank_w, constants.shank_h
         },
         color       = colors.color_left2,
-        mesh_center = { 0.0, 0.0, 0.0 },
+        mesh_center = { 0.0, 0.0, -0.5*constants.shank_h },
         src         = "meshes/unit_cube.obj",
     },
     -- FOOT LEFT
@@ -157,7 +157,7 @@ meshes = {
             constants.foot_l, constants.foot_w, constants.foot_h
         },
         color       = colors.color_left,
-        mesh_center = { 0.0, 0.0, 0.0 },
+        mesh_center = { 0.5*constants.foot_l - 0.5 * constants.shank_w, 0.0, -0.5*constants.foot_h },
         src         = "meshes/unit_cube.obj",
     },
     -- THIGH RIGHT
@@ -167,17 +167,17 @@ meshes = {
             constants.thigh_l, constants.thigh_w, constants.thigh_h
         },
         color       = colors.color_right,
-        mesh_center = { 0.0, 0.0, 0.0 },
+        mesh_center = { 0.0, 0.0, -0.5*constants.thigh_h },
         src         = "meshes/unit_cube.obj",
     },
     -- SHANK RIGHT
     shank_right = {
         name        = "shank_right",
         dimensions  = {
-            constants.thigh_l, constants.thigh_w, constants.thigh_h
+            constants.shank_l, constants.shank_w, constants.shank_h
         },
         color       = colors.color_right2,
-        mesh_center = { 0.0, 0.0, 0.0 },
+        mesh_center = { 0.0, 0.0, -0.5*constants.shank_h },
         src         = "meshes/unit_cube.obj",
     },
     -- FOOT RIGHT
@@ -187,7 +187,7 @@ meshes = {
             constants.foot_l, constants.foot_w, constants.foot_h
         },
         color       = colors.color_right,
-        mesh_center = { 0.0, 0.0, 0.0 },
+        mesh_center = { 0.5*constants.foot_l - 0.5 * constants.shank_w, 0.0, -0.5*constants.foot_h },
         src         = "meshes/unit_cube.obj",
     }
 }
