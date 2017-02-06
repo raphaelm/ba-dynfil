@@ -31,6 +31,34 @@ def rotz(rad):
     ])
 
 
+def rotx_dot (x, xdot):
+    s = np.sin(x)
+    c = np.cos(x)
+    return np.array([
+        [0., 0., 0.],
+        [0., -s,  c],
+        [0., -c, -s]
+    ])[:, :, None].dot(xdot[None, :])
+
+def roty_dot (y, ydot):
+    s = np.sin(y)
+    c = np.cos(y)
+    return np.array([
+        [-s, 0., -c],
+        [0., 0., 0.],
+        [c,  0., -s]
+    ])[:, :, None].dot(ydot[None, :])
+
+
+def rotz_dot (z, zdot):
+    s = np.sin(z)
+    c = np.cos(z)
+    return np.array([
+        [-s,  c, 0.],
+        [-c, -s, 0.],
+        [0., 0., 0.]
+    ])[:, :, None].dot(zdot[None, :])
+
 def matrix_from_euler_xyz(angles, order):
     res = np.zeros([3, 3])
     if order == "123":
