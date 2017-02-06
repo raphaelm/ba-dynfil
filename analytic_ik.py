@@ -21,15 +21,15 @@ pelvis:T:Z,
 pelvis:R:X:rad,
 pelvis:R:Y:rad,
 pelvis:R:Z:rad,
-hip_right:R:Z:rad,
-hip_right:R:Y:rad,
-hip_right:R:X:rad,
+hip_right:R:-Z:rad,
+hip_right:R:-X:rad,
+hip_right:R:-Y:rad,
 knee_right:R:Y:rad,
 ankle_right:R:Y:rad,
 ankle_right:R:X:rad,
-hip_left:R:Z:rad,
-hip_left:R:Y:rad,
-hip_left:R:X:rad,
+hip_left:R:-Z:rad,
+hip_left:R:-X:rad,
+hip_left:R:-Y:rad,
 knee_left:R:Y:rad,
 ankle_left:R:Y:rad,
 ankle_left:R:X:rad
@@ -100,11 +100,11 @@ def rotzdot (z, zdot):
 
 
 # -----------------------------------------------------------------------------
-def ik_leg(
-    model,
-    root, foot_right, foot_left
-    # root_dot=None, foot_dot=None,
-    # root_ddot=None, foot_ddot=None
+def ik_one_leg(
+    model, side,
+    root, foot,
+    root_dot=None, foot_dot=None,
+    root_ddot=None, foot_ddot=None
 ):
     """
     Single leg inverse kinematics providing positions, velocities and
@@ -145,40 +145,29 @@ def ik_leg(
     print "root dsrd: ", root.r, "\n", root.E
     print ""
 
-    print "foot right dsrd: ", foot_right.r, "\n", foot_right.E
+    print "foot dsrd: ", foot.r, "\n", foot.E
     print ""
-
-    print "foot left dsrd: ", foot_left.r, "\n", foot_left.E
-    print ""
-
-    q = np.zeros(model.dof_count)
-    qdot = np.zeros(model.dof_count)
-    qddot = np.zeros(model.dof_count)
-
     root_id = model.GetBodyId("pelvis")
     root_X = model.X_base[root_id]
     # print "root ID: ", pprint.pprint(root_id)
     # print "  X:\n", root_X
 
-    hipr_id = model.GetBodyId("hip_right")
+    hipr_id = model.GetBodyId("hip_" + side)
     hipr_X = model.X_base[hipr_id]
     # print "hip right ID: ", pprint.pprint(hipr_id)
     # print "  X:\n", hipr_X
 
-    kneer_id = model.GetBodyId("knee_right")
+    kneer_id = model.GetBodyId("knee_" + side)
     kneer_X = model.X_base[kneer_id]
     # print "knee right ID: ", pprint.pprint(kneer_id)
     # print "  X:\n", kneer_X
 
-    footr_id = model.GetBodyId("ankle_right")
+    footr_id = model.GetBodyId("ankle_" + side)
     footr_X = model.X_base[footr_id]
     # print "foot right ID: ", pprint.pprint(footr_id)
     # print "  X:\n", footr_X
 
     # assign obvious choices for root frame
-    q[0:3] = root.r
-    # TODO get Euler angles from matrix
-    # q[3:6]
 
     # D = root_X.r - hipr_X.r
     D = hipr_X.r - root_X.r
@@ -192,7 +181,7 @@ def ik_leg(
 
     # crotch from ankle
     # r = Foot.R’ * (Body.p + Body.R * [0 D 0]’- Foot.p)
-    r = foot_right.E.T.dot(root.r + root.E.dot(D) - foot_right.r)
+    r = foot.E.T.dot(root.r + root.E.dot(D) - foot.r)
     print "r", r
 
     # C = norm(r)
@@ -200,7 +189,6 @@ def ik_leg(
     print "C: ", C
 
     # compute knee angle q5
-    q5 = 0.0
     c5 = (C**2 - A**2 - B**2) / (2.0*A*B)
     print "c5: ", c5
     if c5 >= 1:
@@ -211,6 +199,7 @@ def ik_leg(
         q5 = np.pi
     else:
         q5 = np.arccos(c5)  # knee pitch
+    print "q5: ", q5
 
     # compute ankle pitch
     q6a = np.arcsin((A/C)*np.sin(np.pi - q5))  # ankle pitch sub
@@ -226,10 +215,11 @@ def ik_leg(
     # compute ankle pitch
     q6 = -np.arctan2(r[0], np.sign(r[2])*np.sqrt(r[1]**2 + r[2]**2)) - q6a
     print "q6: ", q6
+    print "q6 (deg): ", q6 * 180/np.pi
 
     # R = Body.R’ * Foot.R * Rroll(-q7) * Rpitch(-q6-q5) # hipZ*hipX*hipY
     # TODO check roll, yaw, pitch
-    R = root.E.T.dot(foot_right.E).dot(rotx(-q7)).dot(roty(-q6 - q5))
+    R = root.E.T.dot(foot.E).dot(rotx(-q7)).dot(roty(-q6 - q5))
     # R = np.eye(3)
     print "R: \n", R
     print "R^T * R = \n", R.T.dot(R)
@@ -248,8 +238,39 @@ def ik_leg(
     q4 = np.arctan2(-R[2, 0], R[2, 2])
 
     # sort in joint angles
-    q[6:12] = [q2, q3, q4, q5, q6, q7]
-    print "q: ", q
+    print "q5 (deg): ", q5/np.pi*180
+
+    q = np.array([q2, q3, q4, q5, q6, q7])
+    qdot = np.array([0, 0, 0, 0, 0, 0])
+    qddot = np.array([0, 0, 0, 0, 0, 0])
+    return q, qdot, qddot
+
+
+def ik_full(
+        model,
+        root, foot_right, foot_left,
+        root_dot=None, foot_right_dot=None, foot_left_dot=None,
+        root_ddot=None, foot_right_ddot=None, foot_left_ddot=None
+):
+    lq, lqdot, lqddot = ik_one_leg(model, "left", root, foot_left, root_dot, foot_left_dot, root_ddot, foot_left_ddot)
+    rq, rqdot, rqddot = ik_one_leg(model, "right", root, foot_right, root_dot, foot_right_dot, root_ddot, foot_right_ddot)
+
+    q = np.zeros(model.dof_count)
+    qdot = np.zeros(model.dof_count)
+    qddot = np.zeros(model.dof_count)
+
+    q[0:3] = root.r
+    # TDOO: qdot[0:3]
+    # TODO: qddot[0:3]
+    # TODO get Euler angles from matrix => q[3:6]
+
+    q[6:12] = rq
+    qdot[6:12] = rq
+    qddot[6:12] = rq
+
+    q[12:18] = lq
+    qdot[12:18] = lq
+    qddot[12:18] = lq
 
     return q, qdot, qddot
 
@@ -277,19 +298,19 @@ if __name__ == "__main__":
         pass
 
     root_desired = Pose()
-    root_desired.r = np.array([0.0, 0.0, 1.0])
+    root_desired.r = np.array([0.0, 0.0, 0.60])
     root_desired.E = np.eye(3)
 
     footr_desired = Pose()
-    footr_desired.r = np.array([0.0, -0.25, 0.5])
+    footr_desired.r = np.array([-0.2, -0.25, 0.0])
     footr_desired.E = np.eye(3)
 
     footl_desired = Pose()
-    footl_desired.r = np.array([0.0, 0.0, 0.5])
+    footl_desired.r = np.array([0.3, 0.25, 0.0])
     footl_desired.E = np.eye(3)
 
     # call to inverse kinematics
-    q_out, qdot_out, qddot_out = ik_leg(
+    q_out, qdot_out, qddot_out = ik_full(
         model,
         root_desired, footr_desired, footl_desired
     )
