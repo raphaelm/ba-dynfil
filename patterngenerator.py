@@ -218,6 +218,16 @@ plot.plot_trajectories_1d_axis(
     title='Derivatives'
 )
 
+plot.plot_trajectories_1d_axis(
+    timesteps[:t],
+    trajectories=[
+        plot.PlotTrajectory(positions=ddlfoot, rotations=None, label='left foot ddot', color='r'),
+        plot.PlotTrajectory(positions=ddrfoot, rotations=None, label='right foot ddot', color='g'),
+    ],
+    filename=os.path.join('out', 'pg_derivs_ddot.pdf'),
+    title='Second Derivatives'
+)
+
 plot.plot_trajectories(
     trajectories=[
         plot.PlotTrajectory(positions=lfoot, rotations=None, label='Left foot', color='r'),
