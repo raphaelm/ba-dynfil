@@ -50,18 +50,22 @@ end
 constants = {
     hip_w = 0.5,
 
+    pelvis_m = 20,
     pelvis_l = 0.2,
     pelvis_w = 0.9*0.5,
     pelvis_h = 0.2,
 
+    thigh_m = 0.4,
     thigh_l = 0.2,
     thigh_w = 0.2,
     thigh_h = 0.4,
 
+    shank_m = 0.3,
     shank_l = 0.2,
     shank_w = 0.2,
     shank_h = 0.3,
 
+    foot_m = 0.1,
     foot_l = 0.3,
     foot_w = 0.2,
     foot_h = 0.1,
@@ -69,6 +73,41 @@ constants = {
 
 -- define bodies
 bodies = {
+    pelvis = get_segment(
+        constants.pelvis_m,
+        {0, 0, 0},
+        get_box_inertia(constants.pelvis_m, constants.pelvis_l, constants.pelvis_w, constants.pelvis_h)
+    ),
+    hip_right = get_segment(
+        constants.thigh_m,
+        {constants.thigh_l/2, 0, 0},
+        get_box_inertia(constants.thigh_m, constants.thigh_l, constants.thigh_w, constants.thigh_h)
+    ),
+    hip_left = get_segment(
+        constants.thigh_m,
+        {constants.thigh_l/2, 0, 0},
+        get_box_inertia(constants.thigh_m, constants.thigh_l, constants.thigh_w, constants.thigh_h)
+    ),
+    knee_right = get_segment(
+        constants.shank_m,
+        {constants.shank_l/2, 0, 0},
+        get_box_inertia(constants.shank_m, constants.shank_l, constants.shank_w, constants.shank_h)
+    ),
+    knee_left = get_segment(
+        constants.shank_m,
+        {constants.shank_l/2, 0, 0},
+        get_box_inertia(constants.shank_m, constants.shank_l, constants.shank_w, constants.shank_h)
+    ),
+    ankle_right = get_segment(
+        constants.foot_m,
+        {constants.foot_l/2, 0, 0},
+        get_box_inertia(constants.foot_m, constants.foot_l, constants.foot_w, constants.foot_h)
+    ),
+    ankle_left = get_segment(
+        constants.foot_m,
+        {constants.foot_l/2, 0, 0},
+        get_box_inertia(constants.foot_m, constants.foot_l, constants.foot_w, constants.foot_h)
+    ),
 }
 
 -- define degrees of freedom of model
@@ -127,7 +166,7 @@ meshes = {
             constants.pelvis_l, constants.pelvis_w, constants.pelvis_h
         },
         color       = colors.color_body,
-        mesh_center = { 0.0, 0.0, -0.5*constants.pelvis_h },
+        mesh_center = { 0.0, 0.0, 0.0 },
         src         = "meshes/unit_cube.obj",
     },
     -- THIGH LEFT
@@ -272,6 +311,7 @@ model = {
             name    = "pelvis",
             parent  = "ROOT",
             joint   = joints.free_flyer,
+            body = bodies.pelvis,
             joint_frame = {
                 r = { 0.0, 0.0, constants.pelvis_h},
                 E = {
@@ -289,6 +329,7 @@ model = {
             name    = "hip_right",
             parent  = "pelvis",
             joint   = joints.hip_right,
+            body = bodies.hip_right,
             joint_frame = {
                 r = { 0.0, -0.5*constants.hip_w, 0.0},
                 E = {
@@ -306,6 +347,7 @@ model = {
             name    = "knee_right",
             parent  = "hip_right",
             joint   = joints.knee_right,
+            body = bodies.knee_right;
             joint_frame = {
                 r = { 0.0, 0.0, -constants.thigh_h},
                 E = {
@@ -323,6 +365,7 @@ model = {
             name    = "ankle_right",
             parent  = "knee_right",
             joint   = joints.ankle_right,
+            body = bodies.ankle_right,
             joint_frame = {
                 r = { 0.0, 0.0, -constants.shank_h},
                 E = {
@@ -340,6 +383,7 @@ model = {
             name    = "hip_left",
             parent  = "pelvis",
             joint   = joints.hip_left,
+            body = bodies.hip_left,
             joint_frame = {
                 r = { 0.0, 0.5*constants.hip_w, 0.0},
                 E = {
@@ -357,6 +401,7 @@ model = {
             name    = "knee_left",
             parent  = "hip_left",
             joint   = joints.knee_left,
+            body = bodies.knee_left,
             joint_frame = {
                 r = { 0.0, 0.0, -constants.thigh_h},
                 E = {
@@ -374,6 +419,7 @@ model = {
             name    = "ankle_left",
             parent  = "knee_left",
             joint   = joints.ankle_left,
+            body = bodies.ankle_left,
             joint_frame = {
                 r = { 0.0, 0.0, -constants.shank_h},
                 E = {
