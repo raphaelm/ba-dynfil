@@ -313,7 +313,7 @@ model = {
             joint   = joints.free_flyer,
             body = bodies.pelvis,
             joint_frame = {
-                r = { 0.0, 0.0, constants.pelvis_h},
+                r = { 0.0, 0.0, 0.0},
                 E = {
                     { 1.0, 0.0, 0.0},
                     { 0.0, 1.0, 0.0},
