@@ -32,6 +32,7 @@ def rotz(rad):
 
 
 def rotx_dot (x, xdot):
+    xdot = np.asarray(xdot)
     s = np.sin(x)
     c = np.cos(x)
     return np.array([
@@ -40,7 +41,9 @@ def rotx_dot (x, xdot):
         [0., -c, -s]
     ])[:, :, None].dot(xdot[None, :])
 
+
 def roty_dot (y, ydot):
+    ydot = np.asarray(ydot)
     s = np.sin(y)
     c = np.cos(y)
     return np.array([
@@ -51,6 +54,7 @@ def roty_dot (y, ydot):
 
 
 def rotz_dot (z, zdot):
+    zdot = np.asarray(zdot)
     s = np.sin(z)
     c = np.cos(z)
     return np.array([
@@ -58,6 +62,48 @@ def rotz_dot (z, zdot):
         [-c, -s, 0.],
         [0., 0., 0.]
     ])[:, :, None].dot(zdot[None, :])
+
+
+def rotx_ddot (x, xdot, xddot):
+    xdot = np.asarray(xdot)
+    xddot = np.asarray(xddot)
+    s = np.sin(x)
+    c = np.cos(x)
+    return np.array([
+        [0., 0., 0.],
+        [0., -s,  c],
+        [0., -c, -s]
+    ])[:, :, None].dot(xddot[None, :]) \
+    + np.array([
+        [0., 0., 0.],
+        [0., -c, -s],
+        [0.,  s, -c]
+    ])[:, :, None].dot(xdot[None, :]) # * xdot
+
+
+def roty_ddot (y, ydot, yddot):
+    ydot = np.asarray(ydot)
+    yddot = np.asarray(yddot)
+    s = np.sin(y)
+    c = np.cos(y)
+    return np.array([
+        [-s, 0., -c],
+        [0., 0., 0.],
+        [c,  0., -s]
+    ])[:, :, None].dot(ydot[None, :])
+
+
+def rotz_ddot (z, zdot, zddot):
+    zdot = np.asarray(zdot)
+    zddot = np.asarray(zddot)
+    s = np.sin(z)
+    c = np.cos(z)
+    return np.array([
+        [-s,  c, 0.],
+        [-c, -s, 0.],
+        [0., 0., 0.]
+    ])[:, :, None].dot(zdot[None, :])
+
 
 def matrix_from_euler_xyz(angles, order):
     res = np.zeros([3, 3])
