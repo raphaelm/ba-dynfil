@@ -17,7 +17,7 @@ from dynfil.utils.meshup import save_to_meshup
 @click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
               help='IK method', default='numerical')
 @click.option('--iterations', type=click.IntRange(0, 100), default=5, help='Number of filter iterations')
-@click.option('--interpolate', type=click.Choice(['none', 'poly', 'savgol']), default='none',
+@click.option('--interpolate', type=click.Choice(['none', 'savgol']), default='none',
               help='Apply interpolation')
 def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
     click.echo(click.style('Filter method:    {}'.format(filter_method), fg='blue'))

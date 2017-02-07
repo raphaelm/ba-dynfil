@@ -4,7 +4,7 @@ import rbdl
 import warnings
 
 from dynfil.bodies import BodyTrajectory
-from dynfil.kinematics import IKConvergenceWarning
+from dynfil.kinematics.numerical import IKConvergenceWarning
 from dynfil.utils.cli import status
 
 
