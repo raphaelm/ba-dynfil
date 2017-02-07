@@ -90,7 +90,7 @@ def ik_one_leg_fd(
             root_h.E = root.E + EPS * root_dot.E[:, :, idir]
             q_h, __, __ = ik_one_leg(
                 model, side,
-                root=root, foot=foot,
+                root=root_h, foot=foot_h,
                 root_dot=None, foot_dot=None,
                 root_ddot=None, foot_ddot=None
             )
@@ -161,12 +161,16 @@ def ik_one_leg(
     # print "foot right ID: ", pprint.pprint(footr_id)
     # print "  X:\n", footr_X
 
-    # D = root_X.r - hipr_X.r
+    # NOTE D, A, B are constants
     D = hipr_X.r - root_X.r
     A = np.linalg.norm(hipr_X.r - kneer_X.r)
     B = np.linalg.norm(kneer_X.r - footr_X.r)
 
     # crotch from ankle
+    # second order derivative evaluation
+    if ddot_ndirs:
+        pass
+
     # first order derivative evaluation
     if dot_ndirs:
         # NOTE D is constant
@@ -177,13 +181,43 @@ def ik_one_leg(
     # r = Foot.R’ * (Body.p + Body.R * [0 D 0]’- Foot.p)
     r = foot.E.T.dot(root.r + root.E.dot(D) - foot.r)
 
+    print "r, r_dot"
+    print "r: ", r
+    print "r_dot: ", r_dot.shape
+    print r_dot
+
     # first order derivative evaluation
     if dot_ndirs:
         C_dot = np.sqrt(r.T.dot(r_dot) + r_dot.T.dot(r))
 
+        # compute FD
+        """
+        EPS = 1e-8
+        C_fd = np.zeros([3, dot_ndirs])
+        r_h0 = foot.E.T.dot(root.r + root.E.dot(D) - foot.r)
+        for i in range(dot_ndirs):
+            root_h = copy.deepcopy(root)
+            foot_h = copy.deepcopy(foot)
+            root_h.r = root.r + EPS * root_dot.r[:, i]
+            root_h.E = root.E + EPS * root_dot.E[:, :, i]
+            foot_h.r = foot.r + EPS * foot_dot.r[:, i]
+            foot_h.E = foot.E + EPS * foot_dot.E[:, :, i]
+            r_h = foot_h.E.T.dot(root_h.r + root_h.E.dot(D) - foot_h.r)
+            fd[:, i] = (r_h - r_h0) / EPS
+        """
+
     # nominal evaluation
     # C = norm(r)
     C = np.linalg.norm(r)
+
+    print "C, C_dot"
+    print "C_dot: ", C_dot.shape
+    print C_dot
+    print "C_fd: ", C_fd.shape
+    print C_fd
+    print "error: "
+    print C_dot - C_fd
+    sys.exit()
 
     # compute knee angle q5
     # first order derivative evaluation
@@ -346,13 +380,13 @@ def ik_one_leg(
 
     qddot = None
     if ddot_ndirs:
-        qddot = np.zeros([6, dot_ndirs])
-        qddot[0, :] = q2_ddot
-        qddot[1, :] = q3_ddot
-        qddot[2, :] = q4_ddot
-        qddot[3, :] = q5_ddot
-        qddot[4, :] = q6_ddot
-        qddot[5, :] = q7_ddot
+        qddot = np.zeros([6, ddot_ndirs])
+        # qddot[0, :] = q2_ddot
+        # qddot[1, :] = q3_ddot
+        # qddot[2, :] = q4_ddot
+        # qddot[3, :] = q5_ddot
+        # qddot[4, :] = q6_ddot
+        # qddot[5, :] = q7_ddot
 
     return q, qdot, qddot
 

@@ -21,7 +21,7 @@ ATOL = 1e-7
     (roty, roty_dot),
     (rotz, rotz_dot),
 ])
-def test_rotx_dot(funcs):
+def test_rot_dot_evaluation(funcs):
     # unpack functions
     rot = funcs[0]
     rot_dot = funcs[1]
