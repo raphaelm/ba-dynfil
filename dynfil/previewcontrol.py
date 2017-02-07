@@ -26,7 +26,7 @@ def online_preview_control(zmp_ref, t_step, z_c, traj_length):
     c = np.matrix([[1, 0, -z_c / 9.81]])
 
     # Size of preview window in steps, taken from jrl-walkgen AnalyticalMorisawaCompact.cpp:834
-    N = int(0.8 / t_step)
+    N = int(0.4 / t_step)
 
     # Solve Ricatti equation, see links above and footnote 16 on p. 144 in Kajita's book
     P = np.matrix(scipy.linalg.solve_discrete_are(A, b, Q, R))
@@ -44,15 +44,32 @@ def online_preview_control(zmp_ref, t_step, z_c, traj_length):
         f[i] = 1 / (R + b.T * P * b) * (b.T * (A - b * K).T ** i * c.T) * Q[0, 0]
 
     com_traj = np.zeros((traj_length, 3))
+
+    costtogo = np.zeros((traj_length, 2, 3, 3))
+    for t in reversed(range(0, traj_length)):
+        for i in range(2):
+            if t == traj_length - 1:
+                costtogo[t][i] = Q
+            else:
+                costtogo[t][i] = (
+                    Q +
+                    A.T.dot(costtogo[t+1][i]).dot(A) -
+                    A.T.dot(costtogo[t+1][i]).dot(b).dot(np.linalg.inv(
+                        b.T.dot(costtogo[t+1][i]).dot(b) + R
+                    )).dot(b.T).dot(costtogo[t+1][i]).dot(A)
+                )
+
     for t in range(traj_length):
         # Limit preview window as we cannot access values after the end of the motion
-        preview_size = min(N, traj_length - t - 1)
-
         u = np.zeros(2)
         for i in range(2):
             # eq (4.74) from p. 144 in Kajita's book
             #u[i] = - K.dot(zmp_diff[t, i])[0,0] + f[:preview_size].dot(zmp_ref[t + 1:t + preview_size + 1, i].T)
-            u[i] = - K.dot(x) + f[:preview_size].dot(zmp_ref[t + 1:t + preview_size + 1, i].T)
+            #u[i] = - K.dot(x if i == 0 else y) + f[:preview_size].dot(zmp_ref[t + 1:t + preview_size + 1, i].T)
+            prev = np.array([zmp_ref[t, i], 0, 0]) - c.dot((x, y)[i])
+            u[i] = - np.linalg.inv(b.T.dot(costtogo[t][i]).dot(b) + R).dot(
+                b.T.dot(costtogo[t][i].dot(A))
+            ).dot(prev.T)
 
         x = A.dot(x) + b * u[0]
         y = A.dot(y) + b * u[1]
