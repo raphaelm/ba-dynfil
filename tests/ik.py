@@ -88,6 +88,10 @@ def ik_one_leg_fd(
         for idir in range(dot_ndirs):
             root_h.r = root.r + EPS * root_dot.r[:, idir]
             root_h.E = root.E + EPS * root_dot.E[:, :, idir]
+
+            foot_h.r = foot.r + EPS * foot_dot.r[:, idir]
+            foot_h.E = foot.E + EPS * foot_dot.E[:, :, idir]
+
             q_h, __, __ = ik_one_leg(
                 model, side,
                 root=root_h, foot=foot_h,
@@ -177,47 +181,66 @@ def ik_one_leg(
         r_dot = foot_dot.E.T.dot(root.r + root.E.dot(D) - foot.r).T \
             + foot.E.T.dot(root_dot.r + D.dot(root_dot.E.T).T - foot_dot.r)
 
-    # nominal evaluation
-    # r = Foot.R’ * (Body.p + Body.R * [0 D 0]’- Foot.p)
-    r = foot.E.T.dot(root.r + root.E.dot(D) - foot.r)
+        # print "r_dot: ", r_dot.shape
+        # print r_dot
 
-    print "r, r_dot"
-    print "r: ", r
-    print "r_dot: ", r_dot.shape
-    print r_dot
-
-    # first order derivative evaluation
-    if dot_ndirs:
-        C_dot = np.sqrt(r.T.dot(r_dot) + r_dot.T.dot(r))
-
-        # compute FD
-        """
+        # # compute FD
         EPS = 1e-8
-        C_fd = np.zeros([3, dot_ndirs])
+        r_fd = np.zeros([3, dot_ndirs])
         r_h0 = foot.E.T.dot(root.r + root.E.dot(D) - foot.r)
         for i in range(dot_ndirs):
             root_h = copy.deepcopy(root)
             foot_h = copy.deepcopy(foot)
-            root_h.r = root.r + EPS * root_dot.r[:, i]
-            root_h.E = root.E + EPS * root_dot.E[:, :, i]
-            foot_h.r = foot.r + EPS * foot_dot.r[:, i]
-            foot_h.E = foot.E + EPS * foot_dot.E[:, :, i]
+
+            root_h.r[:] = root.r[:] + EPS * root_dot.r[:, i]
+            root_h.E[:, :] = root.E[:, :] + EPS * root_dot.E[:, :, i]
+
+            foot_h.r[:] = foot.r[:] + EPS * foot_dot.r[:, i]
+            foot_h.E[:, :] = foot.E[:, :] + EPS * foot_dot.E[:, :, i]
+
             r_h = foot_h.E.T.dot(root_h.r + root_h.E.dot(D) - foot_h.r)
-            fd[:, i] = (r_h - r_h0) / EPS
-        """
+            r_fd[:, i] = (r_h - r_h0) / EPS
+
+        # print "r_fd: ", r_fd.shape
+        # print r_fd
+        # print "error: "
+        # print r_dot - r_fd
+
+    # nominal evaluation
+    # r = Foot.R’ * (Body.p + Body.R * [0 D 0]’- Foot.p)
+    r = foot.E.T.dot(root.r + root.E.dot(D) - foot.r)
+    # print "r: ", r
+
+
+    # first order derivative evaluation
+    if dot_ndirs:
+        # NOTE: C = sqrt(x^T * x)
+        # NOTE: C_dot = 1 / (2*sqrt(x^T * x)) * (x_dot^T * x + x^T * x_dot)
+        #             = (2 * x^T * x_dot) / (2*sqrt(x^T * x))
+        #             = (x^T * x_dot) / sqrt(x^T * x)
+        C_dot = r.dot(r_dot) / np.sqrt(r.dot(r))
+
+        # print "C_dot"
+        # print "C_dot: ", C_dot.shape
+        # print C_dot
+
+        # # compute FD
+        # EPS = 1e-8
+        # C_fd = np.zeros([1, dot_ndirs])
+        # C_h0 = np.linalg.norm(r)
+        # for i in range(dot_ndirs):
+        #     r_h = r + EPS * r_dot[:, i]
+        #     C_h = np.linalg.norm(r_h)
+        #     C_fd[:, i] = (C_h - C_h0) / EPS
+        # print "C_fd: ", C_fd.shape
+        # print C_fd
+        # print "error: "
+        # print C_dot - C_fd
 
     # nominal evaluation
     # C = norm(r)
     C = np.linalg.norm(r)
-
-    print "C, C_dot"
-    print "C_dot: ", C_dot.shape
-    print C_dot
-    print "C_fd: ", C_fd.shape
-    print C_fd
-    print "error: "
-    print C_dot - C_fd
-    sys.exit()
+    # print "C: ", C
 
     # compute knee angle q5
     # first order derivative evaluation
