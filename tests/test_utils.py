@@ -13,8 +13,8 @@ from dynfil.utils import (rotx_dot, roty_dot, rotz_dot)
 from dynfil.utils import (rotx_ddot, roty_ddot, rotz_ddot)
 
 
-RTOL = 1e-8
-ATOL = 1e-8
+RTOL = 1e-7
+ATOL = 1e-7
 
 @pytest.mark.parametrize("funcs", [
     (rotx, rotx_dot),
@@ -30,7 +30,7 @@ def test_rotx_dot(funcs):
     nom = np.pi/8.
 
     dot_ndirs = 6
-    dot = np.ones([dot_ndirs])
+    dot = np.random.uniform(low=-np.pi/2., high=np.pi/2., size=[dot_ndirs])
 
     # derivative evaluation using analytic derivative
     actual = rot_dot(nom, dot)
@@ -53,4 +53,7 @@ def test_rotx_dot(funcs):
     # print "desired: ", desired.shape
     # for i in range(dot_ndirs):
     #     print desired[:, :, i]
+    # print "error: ", desired.shape
+    # for i in range(dot_ndirs):
+    #     print desired[:, :, i] - actual[:, :, i]
     assert_allclose(actual, desired, rtol=RTOL, atol=ATOL)
