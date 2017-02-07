@@ -220,7 +220,6 @@ def ik_one_leg(
         #             = (x^T * x_dot) / sqrt(x^T * x)
         C_dot = r.dot(r_dot) / np.sqrt(r.dot(r))
 
-        # print "C_dot"
         # print "C_dot: ", C_dot.shape
         # print C_dot
 
@@ -246,21 +245,40 @@ def ik_one_leg(
     # first order derivative evaluation
     if dot_ndirs:
         # NOTE only C is non-constant
-        c5_dot = (2*C_dot) / (2.0*A*B)**2
+        c5_dot = (C * C_dot) / (A*B)
+
+        # print "c5_dot: ", c5_dot.shape
+        # print c5_dot
+
+        # # compute FD
+        # EPS = 1e-8
+        # c5_fd = np.zeros([dot_ndirs])
+        # c5_h0 = (C**2 - A**2 - B**2) / (2.0*A*B)
+        # for i in range(dot_ndirs):
+        #     C_h = C + EPS * C_dot[i]
+        #     c5_h = (C_h**2 - A**2 - B**2) / (2.0*A*B)
+        #     c5_fd[i] = (c5_h - c5_h0) / EPS
+        # print "c5_fd: ", c5_fd.shape
+        # print c5_fd
+        # print "error: "
+        # print c5_dot - c5_fd
 
     # nominal evaluation
     c5 = (C**2 - A**2 - B**2) / (2.0*A*B)
+    # print "c5: ", c5
 
     if c5 >= 1:
         # first order derivative evaluation
         if dot_ndirs:
             q5_dot = c5.fill(0.0)
+
         # nominal evaluation
         q5 = 0.0
     elif c5 <= -1:
         # first order derivative evaluation
         if dot_ndirs:
             q5_dot = c5.fill(0.0)
+
         # nominal evaluation
         q5 = np.pi
     else:
@@ -268,9 +286,27 @@ def ik_one_leg(
         if dot_ndirs:
             # from http://www.math.com/tables/derivatives/tableof.htm
             # d/dx arccos(x) = -1 / sqrt(1 - x**2)
-            q5_dot = -1 / np.sqrt(1 - c5_dot**2)
+            q5_dot = -c5_dot / np.sqrt(1 - c5**2)
+            print "q5_dot: ", q5_dot.shape
+            print q5_dot
+
+            # compute FD
+            # EPS = 1e-8
+            # q5_fd = np.zeros([dot_ndirs])
+            # q5_h0 = np.arccos(c5)  # knee pitch
+            # for i in range(dot_ndirs):
+            #     c5_h = c5 + EPS * c5_dot[i]
+            #     q5_h = np.arccos(c5_h)  # knee pitch
+            #     q5_fd[i] = (q5_h - q5_h0) / EPS
+            # print "q5_fd: ", q5_fd.shape
+            # print q5_fd
+            # print "error: "
+            # print q5_dot - q5_fd
+
         # nominal evaluation
         q5 = np.arccos(c5)  # knee pitch
+
+    print "q5: ", q5
 
     # compute ankle pitch
     # first order derivative evaluation
@@ -287,6 +323,7 @@ def ik_one_leg(
     # nominal evaluation
     q6a = np.arcsin((A/C)*np.sin(np.pi - q5))  # ankle pitch sub
 
+    sys.exit()
     # compute ankle roll
     # first order derivative evaluation
     if dot_ndirs:
