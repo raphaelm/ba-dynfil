@@ -12,20 +12,46 @@ import rbdl
 from dynfil.utils.angles import rotx, roty
 
 
-def ik_one_leg(D, A, B, root, foot, t):
-    root_r = root.traj_pos[t]
-    foot_r = foot.traj_pos[t]
-    root_E = root.traj_ort[t]
-    foot_E = foot.traj_ort[t]
-    # Kajitas book, p 53
+def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
+    if root_dot and np.any(root_dot):
+        dot_ndirs = root_dot.shape[-1]
+    else:
+        dot_ndirs = None
+
+    # r: vector hip to ankle
     r = foot_E.T.dot(root_r + root_E.dot(D) - foot_r)
+    if dot_ndirs:
+        r_dot = foot_E.T.dot(root_r + root_E.dot(D) - foot_dot)
+
+    # C: norm of r (distance hip to ankle
+    # NOTE: C = sqrt(x^T * x)
+    # NOTE: C_dot = 1 / (2*sqrt(x^T * x)) * (x_dot^T * x + x^T * x_dot)
+    #             = (2 * x^T * x_dot) / (2*sqrt(x^T * x))
+    #             = (x^T * x_dot) / sqrt(x^T * x)
     C = np.linalg.norm(r)
+    if dot_ndirs:
+        C_dot = r.dot(r_dot) / np.sqrt(r.dot(r))
+
+    # q5: Knee pitch
+    # c5: arccos()-Argument for q5 calculation
+    # NOTE: A and B are constant, therefore c5_dot is easy to calculate
     c5 = (C ** 2 - A ** 2 - B ** 2) / (2.0 * A * B)
+    if dot_ndirs:
+        c5_dot = (C * C_dot) / (A * B)
     if c5 >= 1:
         q5 = 0.0
+        if dot_ndirs:
+            q5_dot = c5.fill(0.0)
     elif c5 <= -1:
         q5 = np.pi
+        if dot_ndirs:
+            q5_dot = c5.fill(0.0)
     else:
+        if dot_ndirs:
+            # from http://www.math.com/tables/derivatives/tableof.htm
+            # d/dx arccos(x) = -1 / sqrt(1 - x**2)
+            q5_dot = -c5_dot / np.sqrt(1 - c5**2)
+
         q5 = np.arccos(c5)  # knee pitch
 
     q6a = np.arcsin((A / C) * np.sin(np.pi - q5))  # ankle pitch sub
@@ -58,10 +84,21 @@ def ik_one_leg(D, A, B, root, foot, t):
     return q, qdot, qddot
 
 
-def ik_trajectory(model, q_ini, chest, lsole, rsole):
+def ik_trajectory(model, q_ini, chest, lsole, rsole,
+                  chest_dot=None, lsole_dot=None, rsole_dot=None):
+    chest_dot = chest_dot or chest.traj_pos_dot
+    lsole_dot = lsole_dot or lsole.traj_pos_dot
+    rsole_dot = rsole_dot or rsole.traj_pos_dot
+
+    # Check dimensions
+    if chest_dot and np.any(chest_dot):
+        dot_ndirs = rsole_dot.shape[-1]
+        assert chest_dot.r.shape == (3, dot_ndirs)
+        assert rsole_dot.r.shape == (3, dot_ndirs)
+        assert lsole_dot.r.shape == (3, dot_ndirs)
+
     q = np.zeros((len(chest), model.q_size))
-    qdot = np.zeros((len(chest), model.qdot_size))
-    qddot = np.zeros((len(chest), model.qdot_size))
+    qdot = np.zeros((len(chest), model.dof_count, dot_ndirs))
 
     # TODO: Center of mass corrections!
     rbdl.UpdateKinematics(model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
@@ -69,32 +106,35 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole):
     root_x = model.X_base[model.GetBodyId("pelvis")]
     hipr_x = model.X_base[model.GetBodyId("hip_right")]
     kneer_x = model.X_base[model.GetBodyId("knee_right")]
-    footr_x = model.X_base[model.GetBodyId("ankle_right")]
+    footr_x = model.X_base[model.GetBodyId("ankle_r1ight")]
     D = hipr_x.r - root_x.r
     A = np.linalg.norm(hipr_x.r - kneer_x.r)
     B = np.linalg.norm(kneer_x.r - footr_x.r)
 
     for t in range(len(q)):
         lq, lqdot, lqddot = ik_one_leg(
-            -D, A, B, chest, lsole, t
+            -D, A, B,
+            chest.traj_pos[t], chest.traj_ort[t],
+            lsole.traj_pos[t], lsole.traj_ort[t],
+            chest_dot[t], lsole_dot[t]
         )
         rq, rqdot, rqddot = ik_one_leg(
-            D, A, B, chest, rsole, t
+            D, A, B,
+            chest.traj_pos[t], chest.traj_ort[t],
+            rsole.traj_pos[t], rsole.traj_ort[t],
+            chest_dot[t], rsole_dot[t]
         )
 
         q[t, 0:3] = chest.traj_pos[t]
-        qdot[t, 0:3] = chest.traj_pos_dot[t]
-        qddot[t, 0:3] = chest.traj_pos_ddot[t]
-        # TDOO: qdot[0:3]
-        # TODO: qddot[0:3]
-        # TODO get Euler angles from matrix => q[3:6]
+        qdot[t, 0:3] = chest_dot
+        # TODO: qddot[t, 0:3] = chest.traj_pos_ddot[t]
 
         q[t, 6:12] = rq
         qdot[t, 6:12] = rqdot
-        qddot[t, 6:12] = rqddot
+        #qddot[t, 6:12] = rqddot
 
         q[t, 12:18] = lq
         qdot[t, 12:18] = lqdot
-        qddot[t, 12:18] = lqddot
+        #qddot[t, 12:18] = lqddot
 
-    return q
+    return q, qdot
