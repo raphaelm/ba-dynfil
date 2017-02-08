@@ -9,7 +9,7 @@ their derivatives will be ignored.
 import numpy as np
 import rbdl
 
-from dynfil.utils.angles import rotx, roty
+from dynfil.utils.angles import rotx, roty, rotx_dot, roty_dot
 
 
 def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
@@ -54,32 +54,110 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
 
         q5 = np.arccos(c5)  # knee pitch
 
-    q6a = np.arcsin((A / C) * np.sin(np.pi - q5))  # ankle pitch sub
+    # q6a: ankle pitch argument
+    if dot_ndirs:
+        # NOTE A is constant
+        # from http://www.math.com/tables/derivatives/tableof.htm
+        # d/dx arcsin(x) = 1 / sqrt(1 - x**2)
+        q6a_dot = (
+            1 / np.sqrt(1 - ((A/C)*np.sin(np.pi - q5))**2) *
+            (
+                - (A*C_dot)/C**2 * np.sin(np.pi - q5)
+                - (A/C) * np.cos(np.pi - q5) * q5_dot
+            )
+        )
 
-    q7 = np.arctan2(r[1], r[2])  # ankle roll -pi/2 < q(6) < pi/2
+    q6a = np.arcsin((A / C) * np.sin(np.pi - q5))
+
+    # q7: ankle roll -pi/2 < q(6) < pi/2
+    if dot_ndirs:
+        # from https://en.wikipedia.org/wiki/Atan2#Derivative
+        # d/d(x,y) arctan2(x, y) = (-y/(x**2 + y**2), x/(x**2 + y**2))
+        q7_dot = (
+            -r[2]/(r[1]**2 + r[2]**2)*r_dot[1, :]
+            + r[1]/(r[1]**2 + r[2]**2)*r_dot[2, :]
+        )
+
+    q7 = np.arctan2(r[1], r[2])
     if q7 > np.pi / 2.:
         q7 = q7 - np.pi
+        if dot_ndirs:
+            q7_dot = q7_dot.fill(0.0)
     elif q7 < -np.pi / 2.:
         q7 = q7 + np.pi
+        if dot_ndirs:
+            q7_dot = q7_dot.fill(0.0)
 
-    # ankle pitch
+    # q6: ankle pitch
+    if dot_ndirs:
+        # from https://en.wikipedia.org/wiki/Atan2#Derivative
+        # d/d(x,y) arctan2(x, y) = (-y/(x**2 + y**2), x/(x**2 + y**2))
+        q6_dot = (
+            - (
+                (
+                    # derivative of atan (outer derivative)
+                    # TODO: this is probably not correct
+                    - np.sign(r[2]) + np.sqrt(r[1] **2 + r[2] ** 2)/(r.T.dot(r))
+                    * (  # inner derivative of first argument
+                        r_dot[0, :]
+                    )
+                    + r[0]**2 /(r.T.dot(r))*r_dot[2, :]
+                    * (  # inner derivative of second argument
+                        - np.sign(r[2])
+                        * (2 * r[1] * r_dot[1, :] + 2 * r[2] * r_dot[2, :])
+                        * 1/np.sqrt(r[1]**2 + r[2]** 2)
+                    )
+                )
+            )
+            - q6a_dot
+        )
+
     q6 = -np.arctan2(r[0], np.sign(r[2]) * np.sqrt(r[1] ** 2 + r[2] ** 2)) - q6a
+
+    # R = Body.R’ * Foot.R * Rroll(-q7) * Rpitch(-q6-q5) # hipZ*hipX*hipY
+    if dot_ndirs:
+        R_dot = root_E.T.dot(foot_E).dot(
+            (
+                rotx_dot(-q7, q7_dot).dot(roty(-q6 - q5))
+                + (rotx(-q7)).dot(roty_dot(-q6 - q5, -q6_dot - q5_dot))
+            )
+        )
 
     R = root_E.T.dot(foot_E).dot(rotx(-q7)).dot(roty(-q6 - q5))
 
-    # hip yaw
+    # q2: hip yaw
+    if dot_ndirs:
+        q2_dot = (
+            R[1, 1]/(R[0, 1]**2 + R[1, 1]**2)*R_dot[0, 1, :]
+            - R[0, 1]/(R[0, 1]**2 + R[1, 1]**2)*R_dot[1, 1, :]
+        )
+
     q2 = np.arctan2(-R[0, 1], R[1, 1])
 
-    # hip roll
+    # q3: hip roll
     cz = np.cos(q2)
     sz = np.sin(q2)
+    if dot_ndirs:
+        cz_dot = -np.sin(q2)*q2_dot
+        sz_dot = np.cos(q2)*q2_dot
+        q3_dot = (
+            -(-R[0, 1]*sz + R[1, 1]*cz)/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
+            + R[2, 1]/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
+        )
     q3 = np.arctan2(R[2, 1], -R[0, 1] * sz + R[1, 1] * cz)
 
-    # hip pitch
+    # q4: hip pitch
+    if dot_ndirs:
+        # from https://en.wikipedia.org/wiki/Atan2#Derivative
+        # d/d(x,y) arctan2(x, y) = (-y/(x**2 + y**2), x/(x**2 + y**2))
+        q4_dot = (
+            R[2, 2]/(R[2, 0]**2 + R[2, 2]**2)*R_dot[2, 0, :]
+            - R[2, 0]/(R[2, 0]**2 + R[2, 2]**2)*R_dot[2, 2, :]
+        )
     q4 = np.arctan2(-R[2, 0], R[2, 2])
 
     q = np.array([q2, q3, q4, q5, q6, q7])
-    qdot = np.array([0, 0, 0, 0, 0, 0])
+    qdot = np.array([q2_dot, q3_dot, q4_dot, q5_dot, q6_dot, q7_dot])
     qddot = np.array([0, 0, 0, 0, 0, 0])
     return q, qdot, qddot
 
