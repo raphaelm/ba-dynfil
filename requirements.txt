@@ -2,4 +2,4 @@ numpy
 matplotlib
 cython
 click
-py.test
+pytest
