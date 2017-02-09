@@ -21,7 +21,7 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
     # r: vector hip to ankle
     r = foot_E.T.dot(root_r + root_E.dot(D) - foot_r)
     if dot_ndirs:
-        r_dot = foot_E.T.dot(root_r + root_E.dot(D) - foot_dot)
+        r_dot = foot_E.T.dot(root_dot - foot_dot)
 
     # C: norm of r (distance hip to ankle
     # NOTE: C = sqrt(x^T * x)
@@ -116,12 +116,14 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
 
     # R = Body.R' * Foot.R * Rroll(-q7) * Rpitch(-q6-q5) # hipZ*hipX*hipY
     if dot_ndirs:
-        R_dot = root_E.T.dot(foot_E).dot(
-            (
-                rotx_dot(-q7, q7_dot).dot(roty(-q6 - q5))
-                + (rotx(-q7)).dot(roty_dot(-q6 - q5, -q6_dot - q5_dot))
+        R_dot = np.zeros((3, 3, dot_ndirs))
+        for i in range(dot_ndirs):
+            R_dot[:, :, i] = root_E.T.dot(foot_E).dot(
+                (
+                    rotx_dot(-q7, -q7_dot)[:, :, i].dot(roty(-q6 - q5))
+                    + (rotx(-q7)).dot(roty_dot(-q6 - q5, -q6_dot - q5_dot)[:, :, i])
+                )
             )
-        )
 
     R = root_E.T.dot(foot_E).dot(rotx(-q7)).dot(roty(-q6 - q5))
 
@@ -142,7 +144,9 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
         sz_dot = np.cos(q2)*q2_dot
         q3_dot = (
             -(-R[0, 1]*sz + R[1, 1]*cz)/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
+            * R_dot[2, 1, :]
             + R[2, 1]/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
+            * (-R_dot[0, 1, :] * sz - R[0, 1] * sz_dot + R_dot[1, 1, :] * cz + R[1, 1] * cz_dot)
         )
     q3 = np.arctan2(R[2, 1], -R[0, 1] * sz + R[1, 1] * cz)
 
