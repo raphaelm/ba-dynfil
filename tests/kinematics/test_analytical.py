@@ -43,10 +43,10 @@ def minimal_trajectory(model):
 
     # Derivate in one arbitrary direction and by the unit matrix
     chest_dot = np.array([
-        [[0.2, 1, 0, 0], [0, 0, 1, 0], [-0.1, 0, 0, 1]]
+        [[0.2, 1, 0, 0], [0.2, 0, 1, 0], [-0.1, 0, 0, 1]]
     ])
     rsole_dot = np.array([
-        [[1, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+        [[1, 0, 0, 0], [0.1, 0, 0, 0], [0.1, 0, 0, 0]]
     ])
 
     return chest, rsole, chest_dot, rsole_dot

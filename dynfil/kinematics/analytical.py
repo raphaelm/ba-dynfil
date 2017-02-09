@@ -12,6 +12,27 @@ import rbdl
 from dynfil.utils.angles import rotx, roty, rotx_dot, roty_dot
 
 
+def fd_helper(dot_ndirs, func, *argpairs):
+    """
+    Takes a number of dimensions, a function to differentiate and any number of tuples as
+    arguments. The first entry of each of these tuples is supposed to be an argument to the
+    function, the second entry is supposed to be a vector with regard to which the
+    derivation should be computed.
+    """
+    eps = 1e-8
+    f = func(*[a[0] for a in argpairs])
+    fdot = np.zeros([dot_ndirs] + list(np.shape(f)))
+    for idir in range(dot_ndirs):
+        args_h = []
+        for a, adot in argpairs:
+            args_h.append(
+                a + eps * adot.T[idir]
+            )
+        f_h = func(*args_h)
+        fdot[idir] = (f_h - f) / eps
+    return fdot
+
+
 def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
     if root_dot is not None and np.any(root_dot):
         dot_ndirs = root_dot.shape[-1]
@@ -22,6 +43,11 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
     r = foot_E.T.dot(root_r + root_E.dot(D) - foot_r)
     if dot_ndirs:
         r_dot = foot_E.T.dot(root_dot - foot_dot)
+
+        r_func = lambda _root_r, _foot_r: foot_E.T.dot(_root_r + root_E.dot(D) - _foot_r)
+        r_dot_fd = fd_helper(dot_ndirs, r_func, (root_r, root_dot), (foot_r, foot_dot)).T
+        print "r_dot fd", r_dot_fd
+        print "r_dot", r_dot
 
     # C: norm of r (distance hip to ankle
     # NOTE: C = sqrt(x^T * x)
@@ -67,6 +93,11 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
             )
         )
 
+        q6a_func = lambda _C, _q5: np.arcsin((A / _C) * np.sin(np.pi - _q5))
+        q6a_dot_fd = fd_helper(dot_ndirs, q6a_func, (C, C_dot), (q5, q5_dot))
+        print "q6a_dot fd", q6a_dot_fd
+        print "q6a_dot", q6a_dot
+
     q6a = np.arcsin((A / C) * np.sin(np.pi - q5))
 
     # q7: ankle roll -pi/2 < q(6) < pi/2
@@ -74,9 +105,9 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
         # from https://en.wikipedia.org/wiki/Atan2#Derivative
         # d/d(x,y) arctan2(x, y) = (-y/(x**2 + y**2), x/(x**2 + y**2))
         q7_dot = (
-            -r[2]/(r[1]**2 + r[2]**2)*r_dot[1, :]
-            + r[1]/(r[1]**2 + r[2]**2)*r_dot[2, :]
-        )
+            r[2]*r_dot[1, :]
+            - r[1]*r_dot[2, :]
+        )/(r[1]**2 + r[2]**2)
 
     q7 = np.arctan2(r[1], r[2])
     if q7 > np.pi / 2.:
@@ -94,44 +125,48 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
         # d/d(x,y) arctan2(x, y) = (-y/(x**2 + y**2), x/(x**2 + y**2))
         q6_dot = (
             - (
-                (
-                    # derivative of atan (outer derivative)
-                    # TODO: this is probably not correct
-                    - np.sign(r[2]) + np.sqrt(r[1] **2 + r[2] ** 2)/(r.T.dot(r))
-                    * (  # inner derivative of first argument
-                        r_dot[0, :]
-                    )
-                    + r[0]**2 /(r.T.dot(r))*r_dot[2, :]
-                    * (  # inner derivative of second argument
-                        - np.sign(r[2])
-                        * (2 * r[1] * r_dot[1, :] + 2 * r[2] * r_dot[2, :])
-                        * 1/np.sqrt(r[1]**2 + r[2]** 2)
-                    )
-                )
-            )
-            - q6a_dot
+                r_dot[0, :] * np.sign(r[2]) * np.sqrt(r[1] ** 2 + r[2] ** 2) -
+                r[0] * np.sign(r[2]) * (2 * r[1] * r_dot[1, :] + 2 * r[2] * r_dot[2, :]) /
+                np.sqrt(r[1] ** 2 + r[2] ** 2)
+            ) / r.T.dot(r) -
+            q6a_dot
         )
+
+        q6_func = lambda _r, _q6a: -np.arctan2(_r[0], np.sign(_r[2]) * np.sqrt(_r[1] ** 2 + _r[2] ** 2)) - _q6a
+        q6_dot_fd = fd_helper(dot_ndirs, q6_func, (r, r_dot), (q6a, q6a_dot))
+        print "q6_dot fd", q6_dot_fd
+        print "q6_dot", q6_dot
+        # TODO: Not really good enough
+        #np.testing.assert_allclose(q6_dot, q6_dot_fd, verbose=True, rtol=1e-7)
 
     q6 = -np.arctan2(r[0], np.sign(r[2]) * np.sqrt(r[1] ** 2 + r[2] ** 2)) - q6a
 
     # R = Body.R' * Foot.R * Rroll(-q7) * Rpitch(-q6-q5) # hipZ*hipX*hipY
     if dot_ndirs:
-        R_dot = np.zeros((3, 3, dot_ndirs))
+        R_dot = np.zeros((dot_ndirs, 3, 3))
+        r_x_q7_dot = rotx_dot(-q7, -q7_dot).transpose([2, 1, 0])
+        r_y_q6_q5_dot = roty_dot(-q6 - q5, -q6_dot - q5_dot).transpose([2, 1, 0])
+        print "r_x_q7_dot", r_x_q7_dot
+        print "r_y_q_q5_dot", r_y_q6_q5_dot
+
         for i in range(dot_ndirs):
-            R_dot[:, :, i] = root_E.T.dot(foot_E).dot(
-                (
-                    rotx_dot(-q7, -q7_dot)[:, :, i].dot(roty(-q6 - q5))
-                    + (rotx(-q7)).dot(roty_dot(-q6 - q5, -q6_dot - q5_dot)[:, :, i])
-                )
+            R_dot[i, :, :] = root_E.T.dot(foot_E).dot(
+                rotx(-q7).dot(r_y_q6_q5_dot[i])
+                + r_x_q7_dot[i].dot(roty(-q6 - q5))
             )
+
+        R_func = lambda _q7, _q6, _q5: root_E.T.dot(foot_E).dot(rotx(-_q7)).dot(roty(-_q6 - _q5))
+        R_dot_fd = fd_helper(dot_ndirs, R_func, (q7, q7_dot), (q6, q6_dot), (q5, q5_dot))
+        print "R_dot fd", R_dot_fd
+        print "R_dot", R_dot
 
     R = root_E.T.dot(foot_E).dot(rotx(-q7)).dot(roty(-q6 - q5))
 
     # q2: hip yaw
     if dot_ndirs:
         q2_dot = (
-            R[1, 1]/(R[0, 1]**2 + R[1, 1]**2)*R_dot[0, 1, :]
-            - R[0, 1]/(R[0, 1]**2 + R[1, 1]**2)*R_dot[1, 1, :]
+            + R[1, 1]/(R[0, 1]**2 + R[1, 1]**2)*R_dot[:, 0, 1]
+            - R[0, 1]/(R[0, 1]**2 + R[1, 1]**2)*R_dot[:, 1, 1]
         )
 
     q2 = np.arctan2(-R[0, 1], R[1, 1])
@@ -143,11 +178,9 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
         cz_dot = -np.sin(q2)*q2_dot
         sz_dot = np.cos(q2)*q2_dot
         q3_dot = (
-            -(-R[0, 1]*sz + R[1, 1]*cz)/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
-            * R_dot[2, 1, :]
-            + R[2, 1]/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
-            * (-R_dot[0, 1, :] * sz - R[0, 1] * sz_dot + R_dot[1, 1, :] * cz + R[1, 1] * cz_dot)
-        )
+            - R_dot[:, 2, 1] * (-R[0, 1] * sz + R[1, 1] * cz)
+            + R[2, 1] * (-R_dot[:, 0, 1] * sz - R[0, 1] * sz_dot + R_dot[:, 1, 1] * cz + R[1, 1] * cz_dot)
+        )/(R[2, 1]**2 + (-R[0, 1]*sz + R[1, 1]*cz)**2)
     q3 = np.arctan2(R[2, 1], -R[0, 1] * sz + R[1, 1] * cz)
 
     # q4: hip pitch
@@ -155,9 +188,9 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
         # from https://en.wikipedia.org/wiki/Atan2#Derivative
         # d/d(x,y) arctan2(x, y) = (-y/(x**2 + y**2), x/(x**2 + y**2))
         q4_dot = (
-            R[2, 2]/(R[2, 0]**2 + R[2, 2]**2)*R_dot[2, 0, :]
-            - R[2, 0]/(R[2, 0]**2 + R[2, 2]**2)*R_dot[2, 2, :]
-        )
+            + R[2, 2] * R_dot[:, 2, 0]
+            - R[2, 0] * R_dot[:, 2, 2]
+        )/(R[2, 0]**2 + R[2, 2]**2)
     q4 = np.arctan2(-R[2, 0], R[2, 2])
 
     q = np.array([q2, q3, q4, q5, q6, q7])
