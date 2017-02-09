@@ -4,5 +4,5 @@ import pytest
 
 @pytest.fixture
 def model():
-    filename = "./data/models/iCubHeidelberg01_new_legs.urdf"
+    filename = "./data/models/ik_test.lua"
     return rbdl.loadModel(filename)
