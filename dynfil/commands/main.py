@@ -37,7 +37,9 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
         chest = BodyTrajectory(model, model.GetBodyId("pelvis"))
 
         lsole = BodyTrajectory(model, model.GetBodyId("ankle_left"))
+        lsole.body_point = np.array([0, 0, 0.1])
         rsole = BodyTrajectory(model, model.GetBodyId("ankle_right"))
+        rsole.body_point = np.array([0, 0, 0.1])
 
         # HeiCub: offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
         chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7])  # , offset_angles=offset_angles)

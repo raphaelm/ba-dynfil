@@ -13,7 +13,7 @@ from dynfil.utils.angles import rotx, roty, rotx_dot, roty_dot
 
 
 def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
-    if root_dot and np.any(root_dot):
+    if root_dot is not None and np.any(root_dot):
         dot_ndirs = root_dot.shape[-1]
     else:
         dot_ndirs = None
@@ -114,7 +114,7 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
 
     q6 = -np.arctan2(r[0], np.sign(r[2]) * np.sqrt(r[1] ** 2 + r[2] ** 2)) - q6a
 
-    # R = Body.R’ * Foot.R * Rroll(-q7) * Rpitch(-q6-q5) # hipZ*hipX*hipY
+    # R = Body.R' * Foot.R * Rroll(-q7) * Rpitch(-q6-q5) # hipZ*hipX*hipY
     if dot_ndirs:
         R_dot = root_E.T.dot(foot_E).dot(
             (
@@ -157,9 +157,26 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
     q4 = np.arctan2(-R[2, 0], R[2, 2])
 
     q = np.array([q2, q3, q4, q5, q6, q7])
-    qdot = np.array([q2_dot, q3_dot, q4_dot, q5_dot, q6_dot, q7_dot])
-    qddot = np.array([0, 0, 0, 0, 0, 0])
+    if dot_ndirs:
+        qdot = np.array([q2_dot, q3_dot, q4_dot, q5_dot, q6_dot, q7_dot])
+    else:
+        qdot = None
+    qddot = np.array([[0], [0], [0], [0], [0], [0]])
     return q, qdot, qddot
+
+
+def ik_constants(model, q_ini):
+    # TODO: Center of mass corrections!
+    rbdl.UpdateKinematics(model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
+
+    root_x = model.X_base[model.GetBodyId("pelvis")]
+    hipr_x = model.X_base[model.GetBodyId("hip_right")]
+    kneer_x = model.X_base[model.GetBodyId("knee_right")]
+    footr_x = model.X_base[model.GetBodyId("ankle_right")]
+    D = hipr_x.r - root_x.r
+    A = np.linalg.norm(hipr_x.r - kneer_x.r)
+    B = np.linalg.norm(kneer_x.r - footr_x.r)
+    return D, A, B
 
 
 def ik_trajectory(model, q_ini, chest, lsole, rsole,
@@ -169,50 +186,47 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
     rsole_dot = rsole_dot or rsole.traj_pos_dot
 
     # Check dimensions
-    if chest_dot and np.any(chest_dot):
+    dot_ndirs = None
+    if chest_dot is not None and np.any(chest_dot):
         dot_ndirs = rsole_dot.shape[-1]
         assert chest_dot.r.shape == (3, dot_ndirs)
         assert rsole_dot.r.shape == (3, dot_ndirs)
         assert lsole_dot.r.shape == (3, dot_ndirs)
 
     q = np.zeros((len(chest), model.q_size))
-    qdot = np.zeros((len(chest), model.dof_count, dot_ndirs))
+    if dot_ndirs:
+        qdot = np.zeros((len(chest), model.dof_count, dot_ndirs or 1))
+    else:
+        qdot = None
 
-    # TODO: Center of mass corrections!
-    rbdl.UpdateKinematics(model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
-
-    root_x = model.X_base[model.GetBodyId("pelvis")]
-    hipr_x = model.X_base[model.GetBodyId("hip_right")]
-    kneer_x = model.X_base[model.GetBodyId("knee_right")]
-    footr_x = model.X_base[model.GetBodyId("ankle_r1ight")]
-    D = hipr_x.r - root_x.r
-    A = np.linalg.norm(hipr_x.r - kneer_x.r)
-    B = np.linalg.norm(kneer_x.r - footr_x.r)
+    D, A, B = ik_constants(model, q_ini)
 
     for t in range(len(q)):
         lq, lqdot, lqddot = ik_one_leg(
             -D, A, B,
             chest.traj_pos[t], chest.traj_ort[t],
-            lsole.traj_pos[t], lsole.traj_ort[t],
+            lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
             chest_dot[t], lsole_dot[t]
         )
         rq, rqdot, rqddot = ik_one_leg(
             D, A, B,
             chest.traj_pos[t], chest.traj_ort[t],
-            rsole.traj_pos[t], rsole.traj_ort[t],
+            rsole.traj_pos[t] + rsole.body_point, rsole.traj_ort[t],
             chest_dot[t], rsole_dot[t]
         )
 
         q[t, 0:3] = chest.traj_pos[t]
-        qdot[t, 0:3] = chest_dot
-        # TODO: qddot[t, 0:3] = chest.traj_pos_ddot[t]
-
         q[t, 6:12] = rq
-        qdot[t, 6:12] = rqdot
-        #qddot[t, 6:12] = rqddot
-
         q[t, 12:18] = lq
-        qdot[t, 12:18] = lqdot
-        #qddot[t, 12:18] = lqddot
+
+        if dot_ndirs:
+            qdot[t, 0:3] = chest_dot[t, 1]  # TODO: Really?
+            # TODO: qddot[t, 0:3] = chest.traj_pos_ddot[t]
+
+            qdot[t, 6:12, :] = rqdot
+            #qddot[t, 6:12] = rqddot
+
+            qdot[t, 12:18, :] = lqdot
+            #qddot[t, 12:18] = lqddot
 
     return q, qdot
