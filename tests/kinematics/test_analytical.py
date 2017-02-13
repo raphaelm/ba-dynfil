@@ -5,8 +5,8 @@ from dynfil.bodies import BodyTrajectory
 from dynfil.kinematics.analytical import ik_one_leg, ik_constants
 
 
-RTOL = 1e-8
-ATOL = 1e-8
+RTOL = 1e-7
+ATOL = 1e-7
 EPS = 1e-8
 
 
@@ -55,19 +55,19 @@ def minimal_trajectory(model):
 def test_one_leg_consistency_first_order_derivative(model):
     D, A, B = ik_constants(model, constants.POSE_WALK_INITIAL_SIMPLE)
     chest, rsole, chest_dot, rsole_dot = minimal_trajectory(model)
-
-    q, qdot, __ = ik_one_leg(
+    q_fd, qdot_fd, __ = ik_one_leg_fd(
         D, A, B,
         chest.traj_pos[0], chest.traj_ort[0],
         rsole.traj_pos[0], rsole.traj_ort[0],
         chest_dot[0], rsole_dot[0]
     )
 
-    q_fd, qdot_fd, __ = ik_one_leg_fd(
+    q, qdot, __ = ik_one_leg(
         D, A, B,
         chest.traj_pos[0], chest.traj_ort[0],
         rsole.traj_pos[0], rsole.traj_ort[0],
-        chest_dot[0], rsole_dot[0]
+        chest_dot[0], rsole_dot[0],
+        debug=True
     )
 
     print(qdot)
