@@ -180,6 +180,8 @@ ddrfoot = ddrfoot[:t]
 zmp = zmp[:t]
 zmp[:, 2] = np.zeros(t)
 
+"""
+Offline PC
 #  Calculate CoM Trajectories  (def (4.67) from p 140 in Kajita's book)
 b = np.ones(t) * (2 * COM_HEIGHT / (GRAVITY * RESOLUTION ** 2) + 1)
 a = c = np.ones(t - 1) * - COM_HEIGHT / (GRAVITY * RESOLUTION ** 2)
@@ -189,6 +191,9 @@ b[t-1] += c[-1]
 # Solve eq. (4.69) from p 141 in Kajita's book
 com = tridag(a, b, c, zmp)
 com[:, 2] = np.ones(t) * COM_HEIGHT
+np.ones((N, 2))
+"""
+
 com = online_preview_control(zmp, RESOLUTION, COM_HEIGHT, len(zmp))
 
 # Save to file
