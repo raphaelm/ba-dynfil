@@ -2,21 +2,71 @@ import numpy as np
 import scipy.linalg
 
 
+def calculate_weights(A, b, c, N, Qe, R):
+    # Stacked matrix from eq. (8) of Katayama paper, def. eq. (15)
+    Atilde = np.vstack((
+        np.hstack((np.eye(1), c.dot(A))),
+        np.hstack((np.zeros((3, 1)), A))
+    ))
+
+    # Stacked vector from eq. (8) of Katayama paper, def. eq. (15)
+    Btilde = np.vstack((
+        c.dot(b),
+        b
+    ))
+
+    # Qtilde matrix in form of eq. (15) of Katayama paper
+    Qtilde = np.diag((Qe, 0, 0, 0))
+
+    # Solve Algebraic Ricatty Equation, see eq. (18) of Katayama paper
+    K = scipy.linalg.solve_discrete_are(Atilde, Btilde, Qtilde, R)
+
+    # Compute weights (17a) and (17b) of Katayama paper in a single iteration
+    Ghelpinv = np.linalg.inv(R + Btilde.T.dot(K.dot(Btilde)))[0, 0]
+    Gix = Ghelpinv * Btilde.T.dot(K).dot(Atilde)
+    Ge = Gix[0, 0]
+    Gx = Gix[0, 1:4]
+
+    # Initial condition from eq. (17c) of Katayama paper
+    Gd = np.zeros(N)
+    Gd[0] = - Ge
+
+    # Definition from eq. (20) of Katayama paper
+    Atilde_c = Atilde - Btilde.dot(Gix)
+
+    # Initial condition from eq. (19) of Katayama paper
+    Xprev = - Atilde_c.T.dot(K).dot(np.matrix([[1, 0, 0, 0]]).T)
+
+    # Precompute weights for Gd
+    for i in range(1, N):
+        # Iteration from eq. (17d)
+        Gd[i] = Ghelpinv * Btilde.T.dot(Xprev)[0, 0]
+        # Iteration from eq. (19)
+        Xprev = Atilde_c.T.dot(Xprev)
+
+    return Ge, Gx, Gd
+
+
 def online_preview_control(zmp_ref, t_step, z_c, traj_length):
     """
-    Preview control algorithm, one iteration. Notation from Kajita book (2004), page 143 ff.
+    Preview control algorithm, one iteration. Notation from Kajita book (2004), page 143 ff and
+    Katayama paper, p. 679ff.
 
     Helpful links:
 
     * http://www.mwm.im/lqr-controllers-with-python/
     * https://de.mathworks.com/help/control/ref/dlqr.html?requestedDomain=www.mathworks.com
+    * https://github.com/a-price/hubomz/blob/be60154a07381b52f1daecc56ffa40e1a598fe17/python/ZmpPreview.py
     """
 
+    # Size of preview window in steps
+    N = int(2.5 / t_step)
+
     # Weights taken from Kajita paper (2014), fig. 6
-    Q = np.eye(3)
+    Qe = 1
     R = 1e-6 * np.eye(1)
 
-    # Definitions (p. 143-144 from Kajita's book)
+    # Definitions (p. 143-144 from Kajita's book, eq. (1)+(2) Katayama paper)
     A = np.matrix([
         [1, t_step, t_step ** 2 / 2],
         [0, 1, t_step],
@@ -25,55 +75,37 @@ def online_preview_control(zmp_ref, t_step, z_c, traj_length):
     b = np.matrix([[t_step ** 3 / 6, t_step ** 2 / 2, t_step]]).T
     c = np.matrix([[1, 0, -z_c / 9.81]])
 
-    # Size of preview window in steps, taken from jrl-walkgen AnalyticalMorisawaCompact.cpp:834
-    N = int(0.4 / t_step)
+    # Calculate weights
+    Ge, Gx, Gd = calculate_weights(A, b, c, N, Qe, R)
 
-    # Solve Ricatti equation, see links above and footnote 16 on p. 144 in Kajita's book
-    P = np.matrix(scipy.linalg.solve_discrete_are(A, b, Q, R))
+    # Output trajectory
+    com_traj = np.zeros((traj_length, 3))
 
-    # Compute LQR gain
-    K = np.matrix(scipy.linalg.inv(b.T * P * b + R) * (b.T * P * A))
-
+    # State vectors
     x = np.matrix([[0, 0, 0]]).T  # com, \dot com, \ddot com -- Initial values
     y = np.matrix([[0, 0, 0]]).T  # com, \dot com, \ddot com -- Initial values
 
-    # Calculate weights
-    f = np.zeros(N)
-    for i in range(N):
-        # eq (4.75) from p. 144 in Kajita's book
-        f[i] = 1 / (R + b.T * P * b) * (b.T * (A - b * K).T ** i * c.T) * Q[0, 0]
-
-    com_traj = np.zeros((traj_length, 3))
-
-    costtogo = np.zeros((traj_length, 2, 3, 3))
-    for t in reversed(range(0, traj_length)):
-        for i in range(2):
-            if t == traj_length - 1:
-                costtogo[t][i] = Q
-            else:
-                costtogo[t][i] = (
-                    Q +
-                    A.T.dot(costtogo[t+1][i]).dot(A) -
-                    A.T.dot(costtogo[t+1][i]).dot(b).dot(np.linalg.inv(
-                        b.T.dot(costtogo[t+1][i]).dot(b) + R
-                    )).dot(b.T).dot(costtogo[t+1][i]).dot(A)
-                )
+    # The preview control does not behave well towards the end of the time frame,
+    # so we fill our zmp_ref trajectory with padding values at the end. This is under
+    # the assumption that the robot does not move in the final state of the planned
+    # trajectory.
+    padding = np.multiply(np.ones((N, 3)), zmp_ref[-1][None, :])
+    padded_zmpref = np.vstack((zmp_ref, padding))
 
     for t in range(traj_length):
-        # Limit preview window as we cannot access values after the end of the motion
         u = np.zeros(2)
         for i in range(2):
-            # eq (4.74) from p. 144 in Kajita's book
-            #u[i] = - K.dot(zmp_diff[t, i])[0,0] + f[:preview_size].dot(zmp_ref[t + 1:t + preview_size + 1, i].T)
-            #u[i] = - K.dot(x if i == 0 else y) + f[:preview_size].dot(zmp_ref[t + 1:t + preview_size + 1, i].T)
-            prev = np.array([zmp_ref[t, i], 0, 0]) - c.dot((x, y)[i])
-            u[i] = - np.linalg.inv(b.T.dot(costtogo[t][i]).dot(b) + R).dot(
-                b.T.dot(costtogo[t][i].dot(A))
-            ).dot(prev.T)
+            val = (x, y)[i]
+            err = c.dot(val) - zmp_ref[t, i]
 
+            # Given by eq. (21) of Katayama paper
+            u[i] = - Ge * err - Gx.dot(val) - Gd[:N].dot(padded_zmpref[t + 1:t + N + 1, i])
+
+        # eq. (5) of Katayama paper
         x = A.dot(x) + b * u[0]
         y = A.dot(y) + b * u[1]
 
+        # Update trajectory
         com_traj[t][0] = x[0, 0]
         com_traj[t][1] = y[0, 0]
         com_traj[t][2] = z_c

@@ -70,7 +70,7 @@ def interpol_foot_z(time_length, height):
 
 
 timesteps = np.arange(0,
-                      WAIT_TIME + (N_STEPS + 1) * (STEP_SINGLE_SUPPORT_TIME + STEP_DOUBLE_SUPPORT_TIME) + 1,
+                      WAIT_TIME * 2 + (N_STEPS + 1) * (STEP_SINGLE_SUPPORT_TIME + STEP_DOUBLE_SUPPORT_TIME) + 1,
                       RESOLUTION)
 lfoot = np.zeros((len(timesteps), 3))
 rfoot = np.zeros((len(timesteps), 3))
@@ -164,6 +164,12 @@ zmp[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * cur
 zmp[t:t + double_support_timesteps, 1] = np.zeros(double_support_timesteps)
 t += double_support_timesteps
 
+# Wait
+lfoot[t:t + wait_steps, 0] = np.ones(wait_steps) * current_lfoot[0]
+rfoot[t:t + wait_steps, 0] = np.ones(wait_steps) * current_rfoot[0]
+zmp[t:t + wait_steps, 0] = np.ones(wait_steps) * current_lfoot[0]
+t += wait_steps
+
 timesteps = timesteps[:t]
 lfoot = lfoot[:t]
 dlfoot = dlfoot[:t]
@@ -183,7 +189,7 @@ b[t-1] += c[-1]
 # Solve eq. (4.69) from p 141 in Kajita's book
 com = tridag(a, b, c, zmp)
 com[:, 2] = np.ones(t) * COM_HEIGHT
-#com = online_preview_control(zmp, RESOLUTION, COM_HEIGHT, len(zmp))
+com = online_preview_control(zmp, RESOLUTION, COM_HEIGHT, len(zmp))
 
 # Save to file
 filedata = np.zeros((t, 29))
