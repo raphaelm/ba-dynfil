@@ -25,9 +25,9 @@ def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='n
         qdot = ik_derivs_fd(q, times)
         qddot = ik_derivs_fd(qdot, times)
     else:
-        q, qdot = analytical.ik_trajectory(model, q_ini, chest, lsole, rsole)
-
-        #qdot = ik_derivs_fd(q, times)
+        res = analytical.ik_trajectory(model, q_ini, chest, lsole, rsole)
+        q = res[0]
+        qdot = res[1][:, :, 0]
         qddot = ik_derivs_fd(qdot, times)
 
     if interpolate == 'savgol':

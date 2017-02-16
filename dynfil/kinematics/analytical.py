@@ -130,11 +130,11 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot, debu
     if q7 > np.pi / 2.:
         q7 = q7 - np.pi
         if dot_ndirs:
-            q7_dot = q7_dot.fill(0.0)
+            q7_dot.fill(0.0)
     elif q7 < -np.pi / 2.:
         q7 = q7 + np.pi
         if dot_ndirs:
-            q7_dot = q7_dot.fill(0.0)
+            q7_dot.fill(0.0)
 
     # q6: ankle pitch
     if dot_ndirs:
@@ -243,17 +243,17 @@ def ik_constants(model, q_ini):
 
 def ik_trajectory(model, q_ini, chest, lsole, rsole,
                   chest_dot=None, lsole_dot=None, rsole_dot=None):
-    chest_dot = chest_dot or chest.traj_pos_dot
-    lsole_dot = lsole_dot or lsole.traj_pos_dot
-    rsole_dot = rsole_dot or rsole.traj_pos_dot
+    chest_dot = chest_dot or chest.traj_pos_dot[:, :, None]
+    lsole_dot = lsole_dot or lsole.traj_pos_dot[:, :, None]
+    rsole_dot = rsole_dot or rsole.traj_pos_dot[:, :, None]
 
     # Check dimensions
     dot_ndirs = None
     if chest_dot is not None and np.any(chest_dot):
         dot_ndirs = rsole_dot.shape[-1]
-        assert chest_dot.r.shape == (3, dot_ndirs)
-        assert rsole_dot.r.shape == (3, dot_ndirs)
-        assert lsole_dot.r.shape == (3, dot_ndirs)
+        assert chest_dot.shape == (len(chest), 3, dot_ndirs)
+        assert rsole_dot.shape == (len(chest), 3, dot_ndirs)
+        assert lsole_dot.shape == (len(chest), 3, dot_ndirs)
 
     q = np.zeros((len(chest), model.q_size))
     if dot_ndirs:
