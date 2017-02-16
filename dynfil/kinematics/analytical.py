@@ -82,11 +82,11 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot, debu
     if c5 >= 1:
         q5 = 0.0
         if dot_ndirs:
-            q5_dot = c5.fill(0.0)
+            q5_dot = np.zeros_like(c5_dot)
     elif c5 <= -1:
         q5 = np.pi
         if dot_ndirs:
-            q5_dot = c5.fill(0.0)
+            q5_dot = np.zeros_like(c5_dot)
     else:
         if dot_ndirs:
             # from http://www.math.com/tables/derivatives/tableof.htm
@@ -242,24 +242,40 @@ def ik_constants(model, q_ini):
 
 
 def ik_trajectory(model, q_ini, chest, lsole, rsole,
-                  chest_dot=None, lsole_dot=None, rsole_dot=None):
+                  chest_dot=None, lsole_dot=None, rsole_dot=None,
+                  chest_ddot=None, lsole_ddot=None, rsole_ddot=None):
     chest_dot = chest_dot or chest.traj_pos_dot[:, :, None]
     lsole_dot = lsole_dot or lsole.traj_pos_dot[:, :, None]
     rsole_dot = rsole_dot or rsole.traj_pos_dot[:, :, None]
+    chest_ddot = chest_ddot or chest.traj_pos_ddot[:, :, None]
+    lsole_ddot = lsole_ddot or lsole.traj_pos_ddot[:, :, None]
+    rsole_ddot = rsole_ddot or rsole.traj_pos_ddot[:, :, None]
 
     # Check dimensions
     dot_ndirs = None
+    ddot_ndirs = None
     if chest_dot is not None and np.any(chest_dot):
         dot_ndirs = rsole_dot.shape[-1]
         assert chest_dot.shape == (len(chest), 3, dot_ndirs)
         assert rsole_dot.shape == (len(chest), 3, dot_ndirs)
         assert lsole_dot.shape == (len(chest), 3, dot_ndirs)
 
+        if chest_ddot is not None and np.any(chest_ddot):
+            assert dot_ndirs == 1  # Other cases not supported
+            ddot_ndirs = rsole_ddot.shape[-1]
+            assert chest_ddot.shape == (len(chest), 3, ddot_ndirs)
+            assert rsole_ddot.shape == (len(chest), 3, ddot_ndirs)
+            assert lsole_ddot.shape == (len(chest), 3, ddot_ndirs)
+
     q = np.zeros((len(chest), model.q_size))
     if dot_ndirs:
         qdot = np.zeros((len(chest), model.dof_count, dot_ndirs or 1))
     else:
         qdot = None
+    if ddot_ndirs:
+        qddot = np.zeros((len(chest), model.dof_count, ddot_ndirs or 1))
+    else:
+        qddot = None
 
     D, A, B = ik_constants(model, q_ini)
 
@@ -283,12 +299,32 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
 
         if dot_ndirs:
             qdot[t, 0:3] = chest_dot[t, 1]  # TODO: Really?
-            # TODO: qddot[t, 0:3] = chest.traj_pos_ddot[t]
-
             qdot[t, 6:12, :] = rqdot
-            #qddot[t, 6:12] = rqddot
-
             qdot[t, 12:18, :] = lqdot
-            #qddot[t, 12:18] = lqddot
 
-    return q, qdot
+        if ddot_ndirs:
+            EPS = 1e-8
+            qddot[t, 0:3] = chest_ddot[t]
+            chest_dh = np.zeros((3, 1))
+            lsole_dh = np.zeros((3, 1))
+            rsole_dh = np.zeros((3, 1))
+            for idir in range(ddot_ndirs):
+                chest_dh[:, 0] = chest_dot[t, :, 0] + EPS * chest_ddot[t, :, idir]
+                lsole_dh[:, 0] = lsole_dot[t, :, 0] + EPS * lsole_ddot[t, :, idir]
+                rsole_dh[:, 0] = rsole_dot[t, :, 0] + EPS * rsole_ddot[t, :, idir]
+                __, lqdot_h, __ = ik_one_leg(
+                    -D, A, B,
+                    chest.traj_pos[t], chest.traj_ort[t],
+                    lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
+                    chest_dh, lsole_dh
+                )
+                __, rqdot_h, __ = ik_one_leg(
+                    D, A, B,
+                    chest.traj_pos[t], chest.traj_ort[t],
+                    rsole.traj_pos[t] + rsole.body_point, rsole.traj_ort[t],
+                    chest_dh, rsole_dh
+                )
+                qddot[t, 6:12, idir] = (rqdot_h[:, 0] - rqdot[:, 0]) / EPS
+                qddot[t, 12:18, idir] = (lqdot_h[:, 0] - lqdot[:, 0]) / EPS
+
+    return q, qdot, qddot
