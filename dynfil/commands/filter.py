@@ -93,7 +93,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
         plot.plot_q_derivs(
             timesteps,
             (q_calc, q_filtered),
-            (qdot_calc, qddot_filtered),
+            (qdot_calc, qdot_filtered),
             (qddot_calc, qddot_filtered),
             labels=('forward run', 'filtered'),
             limit=5,

@@ -298,7 +298,7 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
         q[t, 12:18] = lq
 
         if dot_ndirs:
-            qdot[t, 0:3] = chest_dot[t, 1]  # TODO: Really?
+            qdot[t, 0:3, :] = chest_dot[t, :, :]
             qdot[t, 6:12, :] = rqdot
             qdot[t, 12:18, :] = lqdot
 
