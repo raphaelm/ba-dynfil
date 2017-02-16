@@ -43,9 +43,15 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
 
         # HeiCub: offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
         chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7])  # , offset_angles=offset_angles)
+        chest.traj_pos_dot = pgdata[:, 28:31]
+        chest.traj_pos_ddot = pgdata[:, 37:40]
 
         lsole.set_trajectories(pgdata[:, 7:10], pgdata[:, 10:13])
+        lsole.traj_pos_dot = pgdata[:, 22:25]
+        lsole.traj_pos_ddot = pgdata[:, 31:34]
         rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
+        rsole.traj_pos_dot = pgdata[:, 25:28]
+        rsole.traj_pos_ddot = pgdata[:, 34:37]
 
         zmp_ref = pgdata[:, 19:22]
 

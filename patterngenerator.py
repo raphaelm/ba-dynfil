@@ -194,10 +194,10 @@ com[:, 2] = np.ones(t) * COM_HEIGHT
 np.ones((N, 2))
 """
 
-com = online_preview_control(zmp, RESOLUTION, COM_HEIGHT, len(zmp))
+com, com_dot, com_ddot = online_preview_control(zmp, RESOLUTION, COM_HEIGHT, len(zmp))
 
 # Save to file
-filedata = np.zeros((t, 29))
+filedata = np.zeros((t, 41))
 filedata[:, 0] = timesteps
 filedata[:, 1:4] = com
 filedata[:, 7:10] = lfoot
@@ -205,6 +205,10 @@ filedata[:, 13:16] = rfoot
 filedata[:, 19:22] = zmp
 filedata[:, 22:25] = dlfoot
 filedata[:, 25:28] = drfoot
+filedata[:, 28:31] = com_dot
+filedata[:, 31:34] = ddlfoot
+filedata[:, 34:37] = ddrfoot
+filedata[:, 37:40] = com_ddot
 np.savetxt('out/pg_data.txt', filedata, delimiter=' ')
 
 
@@ -226,6 +230,7 @@ plot.plot_trajectories_1d_axis(
     trajectories=[
         plot.PlotTrajectory(positions=dlfoot, rotations=None, label='left foot dot', color='r'),
         plot.PlotTrajectory(positions=drfoot, rotations=None, label='right foot dot', color='g'),
+        plot.PlotTrajectory(positions=com_dot, rotations=None, label='CoM dot', color='b'),
     ],
     filename=os.path.join('out', 'pg_derivs.pdf'),
     title='Derivatives'
@@ -236,6 +241,7 @@ plot.plot_trajectories_1d_axis(
     trajectories=[
         plot.PlotTrajectory(positions=ddlfoot, rotations=None, label='left foot ddot', color='r'),
         plot.PlotTrajectory(positions=ddrfoot, rotations=None, label='right foot ddot', color='g'),
+        plot.PlotTrajectory(positions=com_ddot, rotations=None, label='CoM ddot', color='b'),
     ],
     filename=os.path.join('out', 'pg_derivs_ddot.pdf'),
     title='Second Derivatives'

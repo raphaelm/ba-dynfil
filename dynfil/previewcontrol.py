@@ -80,6 +80,8 @@ def online_preview_control(zmp_ref, t_step, z_c, traj_length):
 
     # Output trajectory
     com_traj = np.zeros((traj_length, 3))
+    comdot_traj = np.zeros((traj_length, 3))
+    comddot_traj = np.zeros((traj_length, 3))
 
     # State vectors
     x = np.matrix([[0, 0, 0]]).T  # com, \dot com, \ddot com -- Initial values
@@ -109,5 +111,11 @@ def online_preview_control(zmp_ref, t_step, z_c, traj_length):
         com_traj[t][0] = x[0, 0]
         com_traj[t][1] = y[0, 0]
         com_traj[t][2] = z_c
+        comdot_traj[t][0] = x[1, 0]
+        comdot_traj[t][1] = y[1, 0]
+        comdot_traj[t][2] = 0
+        comddot_traj[t][0] = x[2, 0]
+        comddot_traj[t][1] = y[2, 0]
+        comddot_traj[t][2] = 0
 
-    return com_traj
+    return com_traj, comdot_traj, comddot_traj
