@@ -88,17 +88,21 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             (q_calc, q_filtered),
             labels=('forward run', 'filtered'),
             filename=os.path.join(ctx.obj['out_dir'], 'q_all.pdf'),
-            title='Filter results on trajectories'
+            title='Filter results on q trajectories'
         )
-        plot.plot_q_derivs(
+        plot.plot_q_values(
             timesteps,
-            (q_calc, q_filtered),
             (qdot_calc, qdot_filtered),
+            labels=('forward run', 'filtered'),
+            filename=os.path.join(ctx.obj['out_dir'], 'qdot_all.pdf'),
+            title='Filter results on qdot'
+        )
+        plot.plot_q_values(
+            timesteps,
             (qddot_calc, qddot_filtered),
             labels=('forward run', 'filtered'),
-            limit=5,
-            filename=os.path.join(ctx.obj['out_dir'], 'q_deriv.pdf'),
-            title='Filter results on first 5 trajectories (with derivatives)'
+            filename=os.path.join(ctx.obj['out_dir'], 'qddot_all.pdf'),
+            title='Filter results on qddot'
         )
 
         plot.plot_trajectories(
