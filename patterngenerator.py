@@ -69,6 +69,14 @@ def interpol_foot_z(time_length, height):
     )
 
 
+def zmp_shift(pos_from, pos_to, tlen):
+    assert tlen > 30
+    data = np.zeros(tlen)
+    lspace = np.linspace(0, 1, 30)
+    data[0:30] = lspace * pos_to + (1 - lspace) * pos_from
+    data[30:] = np.ones(tlen - 30) * pos_to
+    return data
+
 timesteps = np.arange(0,
                       WAIT_TIME * 2 + (N_STEPS + 1) * (STEP_SINGLE_SUPPORT_TIME + STEP_DOUBLE_SUPPORT_TIME) + 1,
                       RESOLUTION)
@@ -109,9 +117,9 @@ while t < wait_steps + len(timesteps) - 3 * (single_support_timesteps + double_s
     rfoot[t:t + single_support_timesteps + 1, 0] = current_rfoot[0] + r_i_xy[0]
     drfoot[t:t + single_support_timesteps + 1, 0] = r_i_xy[1]
     ddrfoot[t:t + single_support_timesteps + 1, 0] = r_i_xy[2]
-    lfoot[t:t + single_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
-    zmp[t:t + single_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
-    zmp[t:t + single_support_timesteps, 1] = np.ones(double_support_timesteps) * current_lfoot[1]
+    lfoot[t:t + single_support_timesteps, 0] = np.ones(single_support_timesteps) * current_lfoot[0]
+    zmp[t:t + single_support_timesteps, 0] = np.ones(single_support_timesteps) * current_lfoot[0]
+    zmp[t:t + single_support_timesteps, 1] = np.ones(single_support_timesteps) * current_lfoot[1]
 
     t += single_support_timesteps
     current_rfoot = rfoot[t - 1]
@@ -119,8 +127,8 @@ while t < wait_steps + len(timesteps) - 3 * (single_support_timesteps + double_s
     # Shift ZMP
     lfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
     rfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
-    zmp[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
-    zmp[t:t + double_support_timesteps, 1] = np.ones(double_support_timesteps) * current_rfoot[1]
+    zmp[t:t + double_support_timesteps, 0] = zmp_shift(current_lfoot[0], current_rfoot[0], double_support_timesteps)
+    zmp[t:t + double_support_timesteps, 1] = zmp_shift(current_lfoot[1], current_rfoot[1], double_support_timesteps)
     t += double_support_timesteps
 
     # Step with left foot
@@ -130,9 +138,9 @@ while t < wait_steps + len(timesteps) - 3 * (single_support_timesteps + double_s
     lfoot[t:t + single_support_timesteps + 1, 0] = current_lfoot[0] + i_xy[0]
     dlfoot[t:t + single_support_timesteps + 1, 0] = i_xy[1]
     ddlfoot[t:t + single_support_timesteps + 1, 0] = i_xy[2]
-    rfoot[t:t + single_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
-    zmp[t:t + single_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
-    zmp[t:t + single_support_timesteps, 1] = np.ones(double_support_timesteps) * current_rfoot[1]
+    rfoot[t:t + single_support_timesteps, 0] = np.ones(single_support_timesteps) * current_rfoot[0]
+    zmp[t:t + single_support_timesteps, 0] = np.ones(single_support_timesteps) * current_rfoot[0]
+    zmp[t:t + single_support_timesteps, 1] = np.ones(single_support_timesteps) * current_rfoot[1]
 
     t += single_support_timesteps
     current_lfoot = lfoot[t - 1]
@@ -140,8 +148,8 @@ while t < wait_steps + len(timesteps) - 3 * (single_support_timesteps + double_s
     # Shift ZMP
     lfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
     rfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
-    zmp[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
-    zmp[t:t + double_support_timesteps, 1] = np.ones(double_support_timesteps) * current_lfoot[1]
+    zmp[t:t + double_support_timesteps, 0] = zmp_shift(current_rfoot[0], current_lfoot[0], double_support_timesteps)
+    zmp[t:t + double_support_timesteps, 1] = zmp_shift(current_rfoot[1], current_lfoot[1], double_support_timesteps)
     t += double_support_timesteps
 
 # Move feed together, last step
@@ -161,7 +169,7 @@ current_rfoot = rfoot[t - 1]
 lfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
 rfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
 zmp[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
-zmp[t:t + double_support_timesteps, 1] = np.zeros(double_support_timesteps)
+zmp[t:t + double_support_timesteps, 1] = zmp_shift(current_lfoot[1], 0, double_support_timesteps)
 t += double_support_timesteps
 
 # Wait
