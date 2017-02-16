@@ -1,6 +1,7 @@
 import click
 import numpy as np
 import rbdl
+import os
 import warnings
 
 from dynfil.bodies import BodyTrajectory
@@ -21,6 +22,9 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
     click.echo(click.style('Trajectory:       {}'.format(trajectory), fg='blue'))
     click.echo(click.style('Output directory: {}'.format(out_dir), fg='blue'))
     click.echo()
+
+    if not os.path.exists(out_dir):
+        os.mkdir(out_dir)
 
     model = rbdl.loadModel(model)
 
