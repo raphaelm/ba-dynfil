@@ -193,6 +193,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                 plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP calc', color='r'),
                 plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP ref', color='g'),
                 plot.PlotTrajectory(positions=zmp_calc - zmp_ref, rotations=None, label='ZMP diff', color='k'),
+                plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='ZMP filtered', color='k'),
             ],
             filename=os.path.join(ctx.obj['out_dir'], 'zmp_components.pdf'),
             title='ZMP components'
