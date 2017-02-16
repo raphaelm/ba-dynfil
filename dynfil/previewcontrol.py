@@ -47,7 +47,7 @@ def calculate_weights(A, b, c, N, Qe, R):
     return Ge, Gx, Gd
 
 
-def online_preview_control(zmp_ref, t_step, z_c, traj_length):
+def online_preview_control(zmp_ref, t_step, z_c, traj_length, window=2.5):
     """
     Preview control algorithm, one iteration. Notation from Kajita book (2004), page 143 ff and
     Katayama paper, p. 679ff.
@@ -60,7 +60,7 @@ def online_preview_control(zmp_ref, t_step, z_c, traj_length):
     """
 
     # Size of preview window in steps
-    N = int(2.5 / t_step)
+    N = int(window / t_step)
 
     # Weights taken from Kajita paper (2014), fig. 6
     Qe = 1

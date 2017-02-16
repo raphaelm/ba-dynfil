@@ -65,7 +65,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
             # TODO check rank
             # TODO add Levenberg-Marquardt in case of rank insufficiencies
             diffxy = np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t, 0:2])
-            chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
+            chest.traj_pos[t] -= 0.1 * np.array([diffxy[0], diffxy[1], 0])
 
     return chest
 
@@ -185,7 +185,7 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         )
         zmp_diff = zmp_calc - zmp_ref
 
-        filter_traj = online_preview_control(zmp_diff, t_step, z_c, len(chest))
+        filter_traj = online_preview_control(zmp_diff, t_step, z_c, len(chest), window=0.8)
         chest.traj_pos[:, 0:2] -= filter_traj[0][:, 0:2]
         chest.traj_pos_dot -= filter_traj[1]
         chest.traj_pos_ddot -= filter_traj[2]
