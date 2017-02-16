@@ -186,7 +186,7 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         zmp_diff = zmp_calc - zmp_ref
 
         filter_traj = online_preview_control(zmp_diff, t_step, z_c, len(chest))
-        chest.traj_pos -= filter_traj[0]
+        chest.traj_pos[:, 0:2] -= filter_traj[0][:, 0:2]
         chest.traj_pos_dot -= filter_traj[1]
         chest.traj_pos_ddot -= filter_traj[2]
 
