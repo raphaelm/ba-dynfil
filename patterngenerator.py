@@ -78,7 +78,7 @@ def zmp_shift(pos_from, pos_to, tlen):
     return data
 
 timesteps = np.arange(0,
-                      WAIT_TIME * 2 + (N_STEPS + 1) * (STEP_SINGLE_SUPPORT_TIME + STEP_DOUBLE_SUPPORT_TIME) + 1,
+                      WAIT_TIME * 2 + STEP_DOUBLE_SUPPORT_TIME + (N_STEPS + 1) * (STEP_SINGLE_SUPPORT_TIME + STEP_DOUBLE_SUPPORT_TIME) + 1,
                       RESOLUTION)
 lfoot = np.zeros((len(timesteps), 3))
 rfoot = np.zeros((len(timesteps), 3))
@@ -107,10 +107,17 @@ i_xy_half = interpol_foot_xy(STEP_SINGLE_SUPPORT_TIME, STEP_LENGTH / 2)
 
 t += wait_steps
 
+# Shift ZMP to left foot
+lfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
+rfoot[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_rfoot[0]
+zmp[t:t + double_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
+zmp[t:t + double_support_timesteps, 1] = zmp_shift(0, current_lfoot[1], double_support_timesteps)
+t += double_support_timesteps
+
 # Generate foot and ZMP trajectories
 while t < wait_steps + len(timesteps) - 3 * (single_support_timesteps + double_support_timesteps):
     # Step with right foot
-    r_i_xy = i_xy if t > wait_steps else i_xy_half
+    r_i_xy = i_xy if t > wait_steps + double_support_timesteps else i_xy_half
     rfoot[t:t + single_support_timesteps + 1, 2] = i_z[0]
     drfoot[t:t + single_support_timesteps + 1, 2] = i_z[1]
     ddrfoot[t:t + single_support_timesteps + 1, 2] = i_z[2]
