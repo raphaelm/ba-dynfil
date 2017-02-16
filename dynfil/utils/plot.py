@@ -21,6 +21,7 @@ def rotate_vector(vec, matarr):
     return res
 
 
+DPI = 150  # TODO: Set to 300
 PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color')
 FootTrajectory = namedtuple('FootTrajectory', 'positions rotations color')
 PlotResiduum = namedtuple('PlotResiduum', 'times values label color')
@@ -85,7 +86,7 @@ def plot_trajectories(trajectories, filename=None, title=None):
     ax.set_ylabel('y')
     ax.set_zlabel('z')
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_trajectories_from_top(trajectories, filename=None, title=None):
@@ -96,7 +97,8 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
         fig.suptitle(title)
     for traj in trajectories:
         if isinstance(traj, PlotTrajectory):
-            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label)
+            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label,
+                    marker='x', markersize=2)
         elif isinstance(traj, FootTrajectory):
             hatch_alt = True
             for t in range(1, len(traj.positions)):
@@ -122,7 +124,7 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_trajectories_1d(times, trajectories, filename=None, title=None):
@@ -140,7 +142,7 @@ def plot_trajectories_1d(times, trajectories, filename=None, title=None):
     ax.set_xlabel('t')
     ax.set_ylabel('y')
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
@@ -168,7 +170,7 @@ def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
     else:
         axes[-1].set_label('t')
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_q_values(times, q, labels, filename=None, title=None):
@@ -197,7 +199,7 @@ def plot_q_values(times, q, labels, filename=None, title=None):
     axes[-1, 3].set_xlabel('time')
 
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_q_derivs(times, q, qdot, qddot, labels, filename=None, limit=None, title=None):
@@ -230,7 +232,7 @@ def plot_q_derivs(times, q, qdot, qddot, labels, filename=None, limit=None, titl
 
     fig.tight_layout()
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=None, limit=5, title=None):
@@ -251,7 +253,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
     axes[-1, 1].set_xlabel('time')
 
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def plot_residuums(data, filename=None, title=None):
@@ -294,7 +296,7 @@ def plot_residuums(data, filename=None, title=None):
     axes[-1, 1].set_xlabel('residuum')
     plt.tight_layout()
     if filename:
-        fig.savefig(filename, dpi=300)
+        fig.savefig(filename, dpi=DPI)
 
 
 def show_all():
