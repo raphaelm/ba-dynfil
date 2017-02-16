@@ -257,7 +257,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
 
 
 def plot_residuums(data, filename=None, title=None):
-    fig, axes = plt.subplots(len(data), 3, figsize=(11.69, 8.27))
+    fig, axes = plt.subplots(len(data), 3, figsize=(11.69, 8.27), sharex='col', sharey='col')
     if title:
         fig.suptitle(title)
 
@@ -288,7 +288,6 @@ def plot_residuums(data, filename=None, title=None):
                 )
             else:
                 axes[i, 2].axis('off')
-
 
             prev_normed_data = normed_data
 
