@@ -5,4 +5,7 @@ env/
 *~
 out/
 obj_meshes_meshup
+out.*
+.cache
+.ropeproject
 
