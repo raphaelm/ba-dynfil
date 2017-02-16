@@ -11,7 +11,7 @@ STEP_SINGLE_SUPPORT_TIME = 0.7
 STEP_DOUBLE_SUPPORT_TIME = 0.7
 FOOT_DISTANCE = 0.25 * 2  # HeiCub: 0.075 * 2
 N_STEPS = 6
-RESOLUTION = 0.001
+RESOLUTION = 0.005
 COM_HEIGHT = 0.60  # HeiCub: 0.444239
 GRAVITY = 9.81
 WAIT_TIME = 0.5
@@ -41,9 +41,9 @@ def interpol_foot_xy(time_length, final_pos):
     ddp = np.polynomial.Polynomial(ddcoef)
 
     return (
-        p(np.arange(0, time_length, RESOLUTION)),
-        dp(np.arange(0, time_length, RESOLUTION)),
-        ddp(np.arange(0, time_length, RESOLUTION))
+        p(np.arange(0, time_length + RESOLUTION/2, RESOLUTION)),
+        dp(np.arange(0, time_length + RESOLUTION/2, RESOLUTION)),
+        ddp(np.arange(0, time_length + RESOLUTION/2, RESOLUTION))
     )
 
 
@@ -63,13 +63,14 @@ def interpol_foot_z(time_length, height):
     ddp = np.polynomial.Polynomial(ddcoef)
 
     return (
-        p(np.arange(0, time_length, RESOLUTION)),
-        dp(np.arange(0, time_length, RESOLUTION)),
-        ddp(np.arange(0, time_length, RESOLUTION))
+        p(np.arange(0, time_length + RESOLUTION/2, RESOLUTION)),
+        dp(np.arange(0, time_length + RESOLUTION/2, RESOLUTION)),
+        ddp(np.arange(0, time_length + RESOLUTION/2, RESOLUTION))
     )
 
 
 def zmp_shift(pos_from, pos_to, tlen):
+    return np.ones(tlen) * pos_to
     assert tlen > 30
     data = np.zeros(tlen)
     lspace = np.linspace(0, 1, 30)
