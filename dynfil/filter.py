@@ -78,7 +78,8 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     """
     chest = chest.copy()
 
-    def min_func(chest_old, chest_new):
+    def gauss_newton_r(chest_old, chest_new):
+        r = np.zeros((len(chest_old), 4))
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
             model, q_ini, chest_new, lsole, rsole, times, method=ik_method
         )
@@ -87,14 +88,15 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         )
         zmp_diff = zmp_calc_new - zmp_ref
         com_diff = np.vstack((np.diff(chest_new.traj_pos, axis=0), np.array([[0, 0, 0]])))
-        #com_diff = chest_new.traj_pos - chest_old.traj_pos
-        delta = 5000
-        return np.sum(np.square(zmp_diff), axis=1) + delta * np.sum(np.power(com_diff, 4), axis=1)
+        delta = 100
+        r[:, 0:2] = zmp_diff[:, 0:2]
+        r[:, 2:4] = np.sqrt(delta) * com_diff[:, 0:2]
+        return r
 
     def min_jacobians(min_ini, chest):
         h = 1e-10
         # Allocate an array of Jacobians (one for each timestep)
-        jacobians = np.zeros((len(times), 1, 2))
+        jacobians = np.zeros((len(times), 4, 2))
 
         for dim in range(2):
             h_vec = np.zeros_like(chest.traj_pos)
@@ -103,13 +105,13 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             chest_modified = chest.copy()
             chest_modified.traj_pos += h_vec
 
-            jacobians[:, 0, dim] = (min_func(chest, chest_modified) - min_ini) / h
+            jacobians[:, :, dim] = (gauss_newton_r(chest, chest_modified) - min_ini) / h
         return jacobians
 
     for i in range(iterations):
         status_update(i + 1, iterations)
 
-        min_ini = min_func(chest, chest)
+        min_ini = gauss_newton_r(chest, chest)
 
         # Calculate jacobians
         jacobians = min_jacobians(min_ini, chest)
@@ -123,7 +125,7 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             print(jacobians[t])
             diffxy = np.linalg.inv(
                 jacobians[t].T.dot(jacobians[t])
-            ).dot(jacobians[t].T).dot(min_ini[t])[:, 0]
+            ).dot(jacobians[t].T).dot(min_ini[t])
             chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
     return chest
