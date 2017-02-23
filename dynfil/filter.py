@@ -65,7 +65,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
             # TODO check rank
             # TODO add Levenberg-Marquardt in case of rank insufficiencies
             diffxy = np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t, 0:2])
-            chest.traj_pos[t] -= 0.1 * np.array([diffxy[0], diffxy[1], 0])
+            chest.traj_pos[t] -= 0.2 * np.array([diffxy[0], diffxy[1], 0])
 
     return chest
 
