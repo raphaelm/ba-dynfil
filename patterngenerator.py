@@ -70,12 +70,9 @@ def interpol_foot_z(time_length, height):
 
 
 def zmp_shift(pos_from, pos_to, tlen):
-    return np.ones(tlen) * pos_to
-    assert tlen > 30
     data = np.zeros(tlen)
-    lspace = np.linspace(0, 1, 30)
-    data[0:30] = lspace * pos_to + (1 - lspace) * pos_from
-    data[30:] = np.ones(tlen - 30) * pos_to
+    lspace = np.linspace(0, 1, tlen)
+    data[:] = lspace * pos_to + (1 - lspace) * pos_from
     return data
 
 timesteps = np.arange(0,
