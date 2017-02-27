@@ -67,10 +67,8 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
         chest_filtered = filters[filter_method](
             chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
             model=model, times=timesteps, iterations=iterations, status_update=status_update,
-            ik_method=ik_method
+            ik_method=ik_method, interpolate=interpolate
         )
-        if interpolate == 'savgol':
-            interpolate_savgol(chest_filtered.traj_pos)
 
     # Calculate ZMP from filtered result
     with status('Calculate ZMP from filtered data'):

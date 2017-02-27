@@ -37,8 +37,16 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times, ik_method):
     return jacobians
 
 
+def update_derivs(chest, times):
+    for t in range(len(chest)):
+        if t > 0:
+            chest.traj_pos_dot[t] = (chest.traj_pos[t] - chest.traj_pos[t - 1]) / (times[t] - times[t - 1])
+        if t > 1:
+            chest.traj_pos_ddot[t] = (chest.traj_pos_dot[t] - chest.traj_pos_dot[t - 1]) / (times[t] - times[t - 1])
+
+
 def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, iterations=5,
-                            ik_method='numerical', status_update=lambda i, n: None):
+                            ik_method='numerical', status_update=lambda i, n: None, interpolate=None):
     """
     Applies the dynamic filter using Newton-Raphson iterations and numerical derivatives.
     (See Algorithm 2.2 in thesis)
@@ -60,19 +68,17 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
         jacobians = zmp_jacobians(model, zmp_calc, chest, lsole, rsole, q_ini, times, ik_method)
 
         for t in range(len(chest)):  # Iterate over timesteps
-            # One Newton iteration:
-            # TODO check how inverse is computed?
-            #      good choice could be QR decomposition
-            # TODO check rank
-            # TODO add Levenberg-Marquardt in case of rank insufficiencies
             diffxy = np.dot(np.linalg.inv(jacobians[t]), zmp_diff[t, 0:2])
-            chest.traj_pos[t] -= 0.2 * np.array([diffxy[0], diffxy[1], 0])
+            chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
+    if interpolate == 'savgol':
+        interpolate_savgol(chest.traj_pos)
+    update_derivs(chest, times)
     return chest
 
 
 def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                         ik_method, iterations=5,
+                         ik_method, iterations=5, interpolate=None,
                          status_update=lambda i, n: None):
     """
     Applies the dynamic filter using Gauss-Newton minimization
@@ -121,18 +127,20 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             # One Gauss-Newton iteration: x -= (A^T A)^-1 A^T b
             # with A = jacobian, b = zmp_diff
             # TODO try np.pinv for Moore-Penrose pseudo inverse
-            # TODO check rank of matrix
             # TODO add Levenberg-Marquardt in case of rank insufficiencies
             diffxy = np.linalg.inv(
                 jacobians[t].T.dot(jacobians[t])
             ).dot(jacobians[t].T).dot(min_ini[t])
-            chest.traj_pos[t] -= 0.2 * np.array([diffxy[0], diffxy[1], 0])
+            chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
+    if interpolate == 'savgol':
+        interpolate_savgol(chest.traj_pos)
+    update_derivs(chest, times)
     return chest
 
 
 def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                            ik_method, iterations=5,
+                            ik_method, iterations=5, interpolate=None,
                             status_update=lambda i, n: None):
     """
     Applies the dynamic filter using steepest descent minimization
@@ -172,11 +180,14 @@ def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             diffxy = gamma * gradients[t]
             chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
 
+    if interpolate == 'savgol':
+        interpolate_savgol(chest.traj_pos)
+    update_derivs(chest, times)
     return chest
 
 
 def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                           ik_method, iterations=5, status_update=lambda i, n: None):
+                           ik_method, iterations=5, status_update=lambda i, n: None, interpolate=None):
     """
     Applies the dynamic filter using preview control. Notation from Kajita book (2004),
     page 143 ff. Helpful links:
