@@ -292,6 +292,26 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
         fig.savefig(filename, dpi=DPI)
 
 
+def plot_res_histo(data, filename=None, title=None, with_pie=False):
+    fig, axes = plt.subplots(1, len(data), figsize=cm2inch(8 * len(data), 5), sharey='row')
+    if title:
+        fig.suptitle(title)
+
+    for i, row in enumerate(data):
+        a = axes[i] if len(data) > 1 else axes
+        if isinstance(row, PlotResiduum):
+            normed_data = (row.values * row.values).sum(axis=1) ** 0.5
+            a.hist(normed_data, label=row.label, color=row.color, bins=np.arange(0, 0.12, 0.01))
+            a.set_xlabel('residuum')
+            a.set_yticks(np.arange(0, 0.012, 0.04))
+
+    a = axes[0] if len(data) > 1 else axes
+    a.set_ylabel('timesteps')
+    plt.tight_layout(w_pad=0)
+    if filename:
+        fig.savefig(filename, dpi=DPI)
+
+
 def plot_residuums(data, filename=None, title=None, with_pie=False):
     fig, axes = plt.subplots(len(data), 3 if with_pie else 2, figsize=cm2inch(14, 9), sharex='col', sharey='col')
     if title:

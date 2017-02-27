@@ -238,5 +238,15 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             # title='Filter result summary'
         )
 
+        plot.plot_res_histo(
+            data=[
+                plot.PlotResiduum(times=timesteps, values=zmp_filtered - zmp_ref,
+                                  # label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
+                                  color='g')
+            ],
+            filename=os.path.join(ctx.obj['out_dir'], 'residuum_histo.pgf'),
+            # title='Filter result summary'
+        )
+
     if ctx.obj['show']:
         plot.show_all()
