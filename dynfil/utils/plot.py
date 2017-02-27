@@ -22,9 +22,18 @@ def rotate_vector(vec, matarr):
 
 
 DPI = 150  # TODO: Set to 300
-PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color')
+PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color linestyle')
+PlotTrajectory.__new__.__defaults__ = ([], [], None, None, '-')
 FootTrajectory = namedtuple('FootTrajectory', 'positions rotations color')
 PlotResiduum = namedtuple('PlotResiduum', 'times values label color')
+
+
+def cm2inch(*tupl):
+    inch = 2.54
+    if isinstance(tupl[0], tuple):
+        return tuple(i/inch for i in tupl[0])
+    else:
+        return tuple(i/inch for i in tupl)
 
 
 def plot_trajectories(trajectories, filename=None, title=None):
@@ -90,19 +99,18 @@ def plot_trajectories(trajectories, filename=None, title=None):
 
 
 def plot_trajectories_from_top(trajectories, filename=None, title=None):
-    fig = plt.figure(figsize=(11.69, 8.27))
+    fig = plt.figure(figsize=cm2inch(14, 6))
     ax = fig.gca()
     ax.axis('equal')
     if title:
         fig.suptitle(title)
     for traj in trajectories:
         if isinstance(traj, PlotTrajectory):
-            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label,
-                    marker='x', markersize=2)
+            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label, color=traj.color)
         elif isinstance(traj, FootTrajectory):
             hatch_alt = True
             for t in range(1, len(traj.positions)):
-                if traj.positions[t][2] < 1e-13 and traj.positions[t-1][2] > 1e-13:
+                if (traj.positions[t][2] < 1e-13 and traj.positions[t-1][2] > 1e-13) or t == 1:
                     # First timestep with this foot on the ground, draw foot.
                     # TODO: Rotate foot
                     ax.add_patch(
@@ -121,8 +129,10 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
     leg = ax.legend()
     for legobj in leg.legendHandles:
         legobj.set_linewidth(5.0)
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
+    ax.set_xlabel('x [m]')
+    ax.set_ylabel('y [m]')
+    plt.margins(x=0.1, y=0.1)
+    plt.tight_layout()
     if filename:
         fig.savefig(filename, dpi=DPI)
 
@@ -145,8 +155,31 @@ def plot_trajectories_1d(times, trajectories, filename=None, title=None):
         fig.savefig(filename, dpi=DPI)
 
 
+def plot_trajectories_1d_axis_combined(times, trajectories, filename=None, title=None):
+    dims = len(trajectories[0].positions[0])
+    fig, axes = plt.subplots(dims, sharex=True, figsize=cm2inch(14, 9))
+    if title:
+        fig.suptitle(title)
+    for i, traj in enumerate(trajectories):
+        if isinstance(traj, PlotTrajectory):
+            for j in range(dims):
+                axes[j].plot(times, traj.positions[:, j], label=traj.label, color=traj.color,
+                             linestyle=traj.linestyle)
+                axes[j].margins(x=.1, y=.1)
+            if i == 0:
+                for j in range(dims):
+                    axes[j].set_ylabel(('x [m]', 'y [m]', 'z [m]')[j])
+
+    axes[-1].set_xlabel('t [s]')
+    axes[0].legend(loc='upper left')
+    plt.tight_layout(h_pad=0)
+    if filename:
+        fig.savefig(filename, dpi=DPI)
+
+
 def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
-    fig, axes = plt.subplots(3, len(trajectories), sharex=True, sharey='row', figsize=(8.27, 11.69))
+    dims = len(trajectories[0].positions[0])
+    fig, axes = plt.subplots(dims, len(trajectories), sharex=True, sharey='row', figsize=cm2inch(14, 9))
     if title:
         fig.suptitle(title)
     for i, traj in enumerate(trajectories):
@@ -155,20 +188,21 @@ def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
                 a = axes[:, i]
             else:
                 a = axes
-            a[0].plot(times, traj.positions[:, 0], label='x', color=traj.color)
-            a[1].plot(times, traj.positions[:, 1], label='y', color=traj.color)
-            a[2].plot(times, traj.positions[:, 2], label='z', color=traj.color)
-            a[0].set_title(traj.label)
+            for j in range(dims):
+                a[j].plot(times, traj.positions[:, j], color=traj.color, linestyle=traj.linestyle)
+                a[j].margins(x=.1, y=.1)
+            if traj.label:
+                a[0].set_title(traj.label)
             if i == 0:
-                a[0].set_ylabel('x')
-                a[1].set_ylabel('y')
-                a[2].set_ylabel('z')
+                for j in range(dims):
+                    a[j].set_ylabel(('x [m]', 'y [m]', 'z [m]')[j])
 
     if len(trajectories) > 1:
         for i in range(len(trajectories)):
-            axes[-1, i].set_xlabel('t')
+            axes[-1, i].set_xlabel('t [s]')
     else:
-        axes[-1].set_label('t')
+        axes[-1].set_xlabel('t [s]')
+    plt.tight_layout(h_pad=0)
     if filename:
         fig.savefig(filename, dpi=DPI)
 

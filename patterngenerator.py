@@ -15,6 +15,12 @@ RESOLUTION = 0.005
 COM_HEIGHT = 0.60  # HeiCub: 0.444239
 GRAVITY = 9.81
 WAIT_TIME = 0.5
+LINEAR_INTERPOLATION = True
+out_dir = 'out/pg.linear'
+
+
+if not os.path.exists(out_dir):
+    os.mkdir(out_dir)
 
 
 def poly_derivate(coef):
@@ -71,8 +77,11 @@ def interpol_foot_z(time_length, height):
 
 def zmp_shift(pos_from, pos_to, tlen):
     data = np.zeros(tlen)
-    lspace = np.linspace(0, 1, tlen)
-    data[:] = lspace * pos_to + (1 - lspace) * pos_from
+    if LINEAR_INTERPOLATION:
+        lspace = np.linspace(0, 1, tlen)
+        data[:] = lspace * pos_to + (1 - lspace) * pos_from
+    else:
+        data[:] = np.ones(tlen) * pos_to
     return data
 
 timesteps = np.arange(0,
@@ -161,9 +170,9 @@ while t < wait_steps + len(timesteps) - 3 * (single_support_timesteps + double_s
 rfoot[t:t + single_support_timesteps + 1, 2] = i_z[0]
 drfoot[t:t + single_support_timesteps + 1, 2] = i_z[1]
 ddrfoot[t:t + single_support_timesteps + 1, 2] = i_z[2]
-rfoot[t:t + single_support_timesteps + 1, 0] = current_rfoot[0] + i_xy[0]
-drfoot[t:t + single_support_timesteps + 1, 0] = i_xy[1]
-ddrfoot[t:t + single_support_timesteps + 1, 0] = i_xy[2]
+rfoot[t:t + single_support_timesteps + 1, 0] = current_rfoot[0] + i_xy_half[0]
+drfoot[t:t + single_support_timesteps + 1, 0] = i_xy_half[1]
+ddrfoot[t:t + single_support_timesteps + 1, 0] = i_xy_half[2]
 lfoot[t:t + single_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
 zmp[t:t + single_support_timesteps, 0] = np.ones(double_support_timesteps) * current_lfoot[0]
 zmp[t:t + single_support_timesteps, 1] = np.ones(double_support_timesteps) * current_lfoot[1]
@@ -222,10 +231,29 @@ filedata[:, 28:31] = com_dot
 filedata[:, 31:34] = ddlfoot
 filedata[:, 34:37] = ddrfoot
 filedata[:, 37:40] = com_ddot
-np.savetxt('out/pg_data.txt', filedata, delimiter=' ')
+np.savetxt(out_dir + '/pg_data.txt', filedata, delimiter=' ')
 
 
 # Plots
+plot.plot_trajectories_1d_axis(
+    timesteps[:t],
+    trajectories=[
+        plot.PlotTrajectory(positions=zmp[:, 0:2], rotations=None, label=None, color='k'),
+    ],
+    filename=os.path.join(out_dir, 'pg_zmp_over_time.pgf'),
+    #title='Planned ZMP trajectory'
+)
+
+plot.plot_trajectories_1d_axis_combined(
+    timesteps[:t],
+    trajectories=[
+        plot.PlotTrajectory(positions=zmp[:, 0:2], rotations=None, label='ZMP', color='k', linestyle='dotted'),
+        plot.PlotTrajectory(positions=com[:, 0:2], rotations=None, label='CoM', color='k'),
+    ],
+    filename=os.path.join(out_dir, 'pg_zmp_com_over_time.pgf'),
+    #title='Planned ZMP trajectory'
+)
+
 plot.plot_trajectories_1d_axis(
     timesteps[:t],
     trajectories=[
@@ -234,7 +262,7 @@ plot.plot_trajectories_1d_axis(
         plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
         plot.PlotTrajectory(positions=com, rotations=None, label='CoM', color='b'),
     ],
-    filename=os.path.join('out', 'pg_trajectories_over_time.pdf'),
+    filename=os.path.join(out_dir, 'pg_trajectories_over_time.pgf'),
     title='Raw trajectories'
 )
 
@@ -245,7 +273,7 @@ plot.plot_trajectories_1d_axis(
         plot.PlotTrajectory(positions=drfoot, rotations=None, label='right foot dot', color='g'),
         plot.PlotTrajectory(positions=com_dot, rotations=None, label='CoM dot', color='b'),
     ],
-    filename=os.path.join('out', 'pg_derivs.pdf'),
+    filename=os.path.join(out_dir, 'pg_derivs.pgf'),
     title='Derivatives'
 )
 
@@ -256,8 +284,18 @@ plot.plot_trajectories_1d_axis(
         plot.PlotTrajectory(positions=ddrfoot, rotations=None, label='right foot ddot', color='g'),
         plot.PlotTrajectory(positions=com_ddot, rotations=None, label='CoM ddot', color='b'),
     ],
-    filename=os.path.join('out', 'pg_derivs_ddot.pdf'),
+    filename=os.path.join(out_dir, 'pg_derivs_ddot.pgf'),
     title='Second Derivatives'
+)
+
+plot.plot_trajectories(
+    trajectories=[
+        plot.PlotTrajectory(positions=lfoot, rotations=None, label='Left foot', color='r'),
+        plot.PlotTrajectory(positions=rfoot, rotations=None, label='Right foot', color='g'),
+        plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
+    ],
+    filename=os.path.join(out_dir, 'pg_trajectories_3d_input.pgf'),
+    title='Input trajectories'
 )
 
 plot.plot_trajectories(
@@ -267,8 +305,20 @@ plot.plot_trajectories(
         plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
         plot.PlotTrajectory(positions=com, rotations=None, label='CoM', color='b'),
     ],
-    filename=os.path.join('out', 'pg_trajectories_3d.pdf'),
+    filename=os.path.join(out_dir, 'pg_trajectories_3d.pgf'),
     title='Trajectories'
 )
 
-plot.show_all()
+plot.plot_trajectories_from_top(
+    trajectories=[
+        plot.PlotTrajectory(positions=lfoot, rotations=None, label='Left foot', color='r'),
+        plot.PlotTrajectory(positions=rfoot, rotations=None, label='Right foot', color='g'),
+        plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
+        plot.FootTrajectory(positions=lfoot, rotations=None, color='r'),
+        plot.FootTrajectory(positions=rfoot, rotations=None, color='g'),
+    ],
+    filename=os.path.join(out_dir, 'pg_trajectories_ground_input.pgf'),
+    #title='2D Trajectories on the ground'
+)
+
+#plot.show_all()
