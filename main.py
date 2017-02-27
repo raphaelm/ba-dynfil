@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 
-from dynfil.commands import main, filter, compare  # NOQA
+from dynfil.commands import main, filter, compare, evaluate  # NOQA
 
 warnings.simplefilter("ignore", category=np.RankWarning)
 

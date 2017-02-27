@@ -5,6 +5,7 @@ import numpy as np
 
 from dynfil import constants, zmp, kinematics, filter
 from dynfil.commands import main
+from dynfil.filter import update_derivs
 from dynfil.kinematics import interpolate_savgol
 from dynfil.utils import plot
 from dynfil.utils.cli import status
@@ -13,7 +14,7 @@ from dynfil.utils.meshup import save_to_meshup
 
 @main.main.command(name='filter')
 @click.pass_context
-@click.option('--filter-method', type=click.Choice(['newton', 'leastsquares', 'steepestdescent', 'pc']),
+@click.option('--filter-method', type=click.Choice(filter.filters.keys()),
               help='Filter method', default='newton')
 @click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
               help='IK method', default='numerical')
@@ -58,17 +59,17 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
 
     # Apply dynamic filter
     with status('Apply dynamic filter') as status_update:
-        filters = {
-            'leastsquares': filter.dynfil_least_squares,
-            'newton': filter.dynfil_newton_numerical,
-            'steepestdescent': filter.dynfil_gradient_descent,
-            'pc': filter.dynfil_preview_control,
-        }
-        chest_filtered = filters[filter_method](
-            chest=chest, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
-            model=model, times=timesteps, iterations=iterations, status_update=status_update,
-            ik_method=ik_method, interpolate=interpolate
-        )
+        chest_filtered = chest.copy()
+        for i in range(iterations):
+            status_update(i + 1, iterations)
+            chest_filtered = filter.filters[filter_method](
+                chest=chest_filtered, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
+                model=model, times=timesteps, ik_method=ik_method
+            )
+
+        if interpolate == 'savgol':
+            interpolate_savgol(chest_filtered.traj_pos)
+        update_derivs(chest_filtered, timesteps)
 
     # Calculate ZMP from filtered result
     with status('Calculate ZMP from filtered data'):
