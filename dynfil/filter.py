@@ -1,5 +1,6 @@
 import numpy as np
 
+from dynfil.kinematics import interpolate_savgol
 from .previewcontrol import online_preview_control
 from . import zmp, kinematics
 
@@ -79,7 +80,7 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     chest = chest.copy()
 
     def gauss_newton_r(chest_old, chest_new):
-        r = np.zeros((len(chest_old), 4))
+        r = np.zeros((len(chest_old), 2))
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
             model, q_ini, chest_new, lsole, rsole, times, method=ik_method
         )
@@ -90,13 +91,13 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
         com_diff = np.vstack((np.diff(chest_new.traj_pos, axis=0), np.array([[0, 0, 0]])))
         delta = 100
         r[:, 0:2] = zmp_diff[:, 0:2]
-        r[:, 2:4] = np.sqrt(delta) * com_diff[:, 0:2]
+        #r[:, 2:4] = np.sqrt(delta) * com_diff[:, 0:2]
         return r
 
     def min_jacobians(min_ini, chest):
         h = 1e-10
         # Allocate an array of Jacobians (one for each timestep)
-        jacobians = np.zeros((len(times), 4, 2))
+        jacobians = np.zeros((len(times), 2, 2))
 
         for dim in range(2):
             h_vec = np.zeros_like(chest.traj_pos)
@@ -122,11 +123,10 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times,
             # TODO try np.pinv for Moore-Penrose pseudo inverse
             # TODO check rank of matrix
             # TODO add Levenberg-Marquardt in case of rank insufficiencies
-            print(jacobians[t])
             diffxy = np.linalg.inv(
                 jacobians[t].T.dot(jacobians[t])
             ).dot(jacobians[t].T).dot(min_ini[t])
-            chest.traj_pos[t] -= np.array([diffxy[0], diffxy[1], 0])
+            chest.traj_pos[t] -= 0.2 * np.array([diffxy[0], diffxy[1], 0])
 
     return chest
 

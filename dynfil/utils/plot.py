@@ -26,6 +26,7 @@ PlotTrajectory = namedtuple('PlotTrajectory', 'positions rotations label color l
 PlotTrajectory.__new__.__defaults__ = ([], [], None, None, '-')
 FootTrajectory = namedtuple('FootTrajectory', 'positions rotations color')
 PlotResiduum = namedtuple('PlotResiduum', 'times values label color')
+PlotResiduum.__new__.__defaults__ = ([], [], None, None)
 
 
 def cm2inch(*tupl):
@@ -99,14 +100,15 @@ def plot_trajectories(trajectories, filename=None, title=None):
 
 
 def plot_trajectories_from_top(trajectories, filename=None, title=None):
-    fig = plt.figure(figsize=cm2inch(14, 6))
+    fig = plt.figure(figsize=cm2inch(14, 8))
     ax = fig.gca()
     ax.axis('equal')
     if title:
         fig.suptitle(title)
     for traj in trajectories:
         if isinstance(traj, PlotTrajectory):
-            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label, color=traj.color)
+            ax.plot(traj.positions[:,0], traj.positions[:,1], label=traj.label, color=traj.color,
+                    linestyle=traj.linestyle, linewidth=0.5)
         elif isinstance(traj, FootTrajectory):
             hatch_alt = True
             for t in range(1, len(traj.positions)):
@@ -121,12 +123,12 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
                             ),
                             constants.FOOT_LENGTH, constants.FOOT_WIDTH,
                             fill=False, hatch='\\' if hatch_alt else '/',
-                            color=traj.color
+                            color=traj.color, linewidth=0.5
                         )
                     )
                     hatch_alt = not hatch_alt
 
-    leg = ax.legend()
+    leg = ax.legend(prop={'size': 7})
     for legobj in leg.legendHandles:
         legobj.set_linewidth(5.0)
     ax.set_xlabel('x [m]')
@@ -171,7 +173,7 @@ def plot_trajectories_1d_axis_combined(times, trajectories, filename=None, title
                     axes[j].set_ylabel(('x [m]', 'y [m]', 'z [m]')[j])
 
     axes[-1].set_xlabel('t [s]')
-    axes[0].legend(loc='upper left')
+    axes[0].legend(loc='upper left', prop={'size': 7})
     plt.tight_layout(h_pad=0)
     if filename:
         fig.savefig(filename, dpi=DPI)
@@ -290,8 +292,8 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_residuums(data, filename=None, title=None):
-    fig, axes = plt.subplots(len(data), 3, figsize=(11.69, 8.27), sharex='col', sharey='col')
+def plot_residuums(data, filename=None, title=None, with_pie=False):
+    fig, axes = plt.subplots(len(data), 3 if with_pie else 2, figsize=cm2inch(14, 9), sharex='col', sharey='col')
     if title:
         fig.suptitle(title)
 
@@ -302,11 +304,14 @@ def plot_residuums(data, filename=None, title=None):
 
             axes[i, 0].plot(row.times, normed_data, label=row.label, color=row.color)
             axes[i, 0].set_ylabel('residuum')
-            axes[i, 0].set_title(row.label)
+            if row.label:
+                axes[i, 0].set_title(row.label)
 
-            axes[i, 1].hist(normed_data, label=row.label, color=row.color)
+            axes[i, 1].hist(normed_data, label=row.label, color=row.color, bins=np.arange(0, 0.12, 0.01))
+            axes[i, 1].set_ylabel('timesteps')
+            axes[i, 1].set_yticks(np.arange(0, 0.012, 0.04))
 
-            if prev_normed_data is not None:
+            if prev_normed_data is not None and with_pie:
                 improved_cnt = np.sum(np.less(normed_data, prev_normed_data))
                 equal_cnt = np.sum(np.equal(normed_data, prev_normed_data))
                 degr_cnt = len(normed_data) - improved_cnt - equal_cnt
@@ -320,14 +325,14 @@ def plot_residuums(data, filename=None, title=None):
                     ],
                     colors=['g', 'y', 'r'],
                 )
-            else:
+            elif with_pie:
                 axes[i, 2].axis('off')
 
             prev_normed_data = normed_data
 
-    axes[-1, 0].set_xlabel('time')
+    axes[-1, 0].set_xlabel('t[s]')
     axes[-1, 1].set_xlabel('residuum')
-    plt.tight_layout()
+    plt.tight_layout(h_pad=0)
     if filename:
         fig.savefig(filename, dpi=DPI)
 

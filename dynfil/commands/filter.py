@@ -5,6 +5,7 @@ import numpy as np
 
 from dynfil import constants, zmp, kinematics, filter
 from dynfil.commands import main
+from dynfil.kinematics import interpolate_savgol
 from dynfil.utils import plot
 from dynfil.utils.cli import status
 from dynfil.utils.meshup import save_to_meshup
@@ -18,7 +19,7 @@ from dynfil.utils.meshup import save_to_meshup
               help='IK method', default='numerical')
 @click.option('--iterations', type=click.IntRange(0, 100), default=5, help='Number of filter iterations')
 @click.option('--interpolate', type=click.Choice(['none', 'savgol']), default='none',
-              help='Apply interpolation')
+              help='Apply interpolation to filter result')
 def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
     click.echo(click.style('Filter method:    {}'.format(filter_method), fg='blue'))
     click.echo(click.style('IK method:        {}'.format(ik_method), fg='blue'))
@@ -39,7 +40,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
     # First ZMP calculation
     with status('Calculate ZMP from forward run'):
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
-            model, q_ini, chest, lsole, rsole, timesteps, interpolate=interpolate, method=ik_method
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
         )
 
         com_calc = kinematics.com_trajectory(model, chest, q_calc)
@@ -68,11 +69,13 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             model=model, times=timesteps, iterations=iterations, status_update=status_update,
             ik_method=ik_method
         )
+        if interpolate == 'savgol':
+            interpolate_savgol(chest_filtered.traj_pos)
 
     # Calculate ZMP from filtered result
     with status('Calculate ZMP from filtered data'):
         q_filtered, qdot_filtered, qddot_filtered = kinematics.inverse_with_derivatives(
-            model, q_ini, chest_filtered, lsole, rsole, timesteps, interpolate=interpolate, method=ik_method
+            model, q_ini, chest_filtered, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
         )
         zmp_filtered = zmp.calculate_zmp_trajectory(model, q_filtered, qdot_filtered, qddot_filtered, chest_filtered)
 
@@ -83,6 +86,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
 
     # Generate plots
     with status('Generate plots'):
+        """
         plot.plot_q_values(
             timesteps,
             (q_calc, q_filtered),
@@ -164,6 +168,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             filename=os.path.join(ctx.obj['out_dir'], 'trajectories_waist.pdf'),
             title='2D Trajectories on waist height ground (reference and forward run)'
         )
+        """
 
         plot.plot_trajectories_from_top(
             trajectories=[
@@ -173,22 +178,39 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                                     color='g'),
                 plot.FootTrajectory(positions=lsole.traj_pos, rotations=lsole.traj_ort, color='r'),
                 plot.FootTrajectory(positions=rsole.traj_pos, rotations=rsole.traj_ort, color='g'),
-                plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m'),
-                plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP from forward run', color='c'),
-                plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='Dynfil: ZMP', color='k'),
+                plot.PlotTrajectory(positions=zmp_ref, rotations=None, label='ZMP reference', color='m',
+                                    linestyle=(0, (5, 1))),
+                plot.PlotTrajectory(positions=zmp_calc, rotations=None, label='ZMP unfiltered', color='c',
+                                    linestyle=(0, (1, 1))),
+                plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='ZMP filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'trajectories_on_ground_with_filtered.pdf'),
-            title='2D Trajectories on the ground (with filtered)'
+            filename=os.path.join(ctx.obj['out_dir'], 'trajectories_on_ground_with_filtered.pgf'),
+            # title='2D Trajectories on the ground (with filtered)'
         )
 
         plot.plot_trajectories_from_top(
             trajectories=[
-                plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='PG: CoM', color='r'),
-                plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM from forward run', color='c'),
-                plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='Dynfil: CoM', color='k'),
+                plot.PlotTrajectory(positions=chest.traj_pos, rotations=lsole.traj_ort, label='CoM from PG', color='r',
+                                    linestyle=(0, (5, 1))),
+                plot.PlotTrajectory(positions=com_calc, rotations=None, label='CoM unfiltered', color='c',
+                                    linestyle=(0, (1, 1))),
+                plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='CoM filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'trajectories_waist_with_filtered.pdf'),
-            title='2D Trajectories on waist height ground (with filtered)'
+            filename=os.path.join(ctx.obj['out_dir'], 'trajectories_waist_with_filtered.pgf'),
+            # title='2D Trajectories on waist height ground (with filtered)'
+        )
+
+        plot.plot_trajectories_1d_axis_combined(
+            timesteps,
+            trajectories=[
+                plot.PlotTrajectory(positions=zmp_calc[:, 0:2], rotations=None, label='ZMP unfiltered', color='c',
+                                    linestyle=(0, (1, 1))),
+                plot.PlotTrajectory(positions=zmp_ref[:, 0:2], rotations=None, label='ZMP reference', color='m',
+                                    linestyle=(0, (5, 1))),
+                plot.PlotTrajectory(positions=zmp_filtered[:, 0:2], rotations=None, label='ZMP filtered', color='k'),
+            ],
+            filename=os.path.join(ctx.obj['out_dir'], 'zmp_filtered.pgf'),
+            # title='ZMP components'
         )
 
         plot.plot_trajectories_1d_axis(
@@ -199,21 +221,21 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                 plot.PlotTrajectory(positions=zmp_calc - zmp_ref, rotations=None, label='ZMP diff', color='k'),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='ZMP filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'zmp_components.pdf'),
+            filename=os.path.join(ctx.obj['out_dir'], 'zmp_components.pgf'),
             title='ZMP components'
         )
 
         plot.plot_residuums(
             data=[
                 plot.PlotResiduum(times=timesteps, values=zmp_calc - zmp_ref,
-                                  label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ without filter',
+                                  # label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ without filter',
                                   color='b'),
                 plot.PlotResiduum(times=timesteps, values=zmp_filtered - zmp_ref,
-                                  label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
+                                  # label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
                                   color='g')
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'residuums.pdf'),
-            title='Filter result summary'
+            filename=os.path.join(ctx.obj['out_dir'], 'residuums.pgf'),
+            # title='Filter result summary'
         )
 
     if ctx.obj['show']:
