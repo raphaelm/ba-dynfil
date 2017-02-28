@@ -183,7 +183,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                                     linestyle=(0, (1, 1))),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='ZMP filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'trajectories_on_ground_with_filtered.pgf'),
+            filenames=[os.path.join(ctx.obj['out_dir'], 'trajectories_on_ground_with_filtered.pgf')],
             # title='2D Trajectories on the ground (with filtered)'
         )
 
@@ -195,7 +195,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                                     linestyle=(0, (1, 1))),
                 plot.PlotTrajectory(positions=chest_filtered.traj_pos, rotations=None, label='CoM filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'trajectories_waist_with_filtered.pgf'),
+            filenames=[os.path.join(ctx.obj['out_dir'], 'trajectories_waist_with_filtered.pgf')],
             # title='2D Trajectories on waist height ground (with filtered)'
         )
 
@@ -208,7 +208,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                                     linestyle=(0, (5, 1))),
                 plot.PlotTrajectory(positions=zmp_filtered[:, 0:2], rotations=None, label='ZMP filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'zmp_filtered.pgf'),
+            filenames=[os.path.join(ctx.obj['out_dir'], 'zmp_filtered.pgf')],
             # title='ZMP components'
         )
 
@@ -220,7 +220,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                 plot.PlotTrajectory(positions=zmp_calc - zmp_ref, rotations=None, label='ZMP diff', color='k'),
                 plot.PlotTrajectory(positions=zmp_filtered, rotations=None, label='ZMP filtered', color='k'),
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'zmp_components.pgf'),
+            filenames=[os.path.join(ctx.obj['out_dir'], 'zmp_components.pgf')],
             title='ZMP components'
         )
 
@@ -233,7 +233,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                                   # label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
                                   color='g')
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'residuums.pgf'),
+            filenames=[os.path.join(ctx.obj['out_dir'], 'residuums.pgf')],
             # title='Filter result summary'
         )
 
@@ -243,7 +243,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                                   # label=r'$\left\|\mathbf{r_{ZMP}} - \mathbf{r_{ZMP}}^{ref}\right\|$ with filter',
                                   color='g')
             ],
-            filename=os.path.join(ctx.obj['out_dir'], 'residuum_histo.pgf'),
+            filenames=[os.path.join(ctx.obj['out_dir'], 'residuum_histo.pgf')],
             # title='Filter result summary'
         )
 

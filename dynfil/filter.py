@@ -46,7 +46,7 @@ def update_derivs(chest, times):
 
 
 def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                            ik_method='numerical'):
+                            ik_method='numerical', previewwindow=None):
     """
     Applies the dynamic filter using Newton-Raphson iterations and numerical derivatives.
     (See Algorithm 2.2 in thesis)
@@ -68,7 +68,7 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     return chest
 
 
-def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times, ik_method):
+def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times, ik_method, previewwindow=None):
     """
     Applies the dynamic filter using Gauss-Newton minimization
     """
@@ -120,7 +120,7 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times, ik_m
     return chest
 
 
-def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times, ik_method):
+def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times, ik_method, previewwindow=None):
     """
     Applies the dynamic filter using steepest descent minimization
     """
@@ -159,7 +159,7 @@ def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
 
 
 def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
-                           ik_method):
+                           ik_method, previewwindow=0.8):
     """
     Applies the dynamic filter using preview control. Notation from Kajita book (2004),
     page 143 ff. Helpful links:
@@ -179,7 +179,7 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     )
     zmp_diff = zmp_calc - zmp_ref
 
-    filter_traj = online_preview_control(zmp_diff, t_step, z_c, len(chest), window=0.8)
+    filter_traj = online_preview_control(zmp_diff, t_step, z_c, len(chest), window=previewwindow)
     chest.traj_pos[:, 0:2] -= filter_traj[0][:, 0:2]
     chest.traj_pos_dot -= filter_traj[1]
     chest.traj_pos_ddot -= filter_traj[2]
@@ -189,6 +189,7 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
 
 filters = {
     'leastsquares': dynfil_least_squares,
+    'gaussnewton': dynfil_least_squares,
     'newton': dynfil_newton_numerical,
     'steepestdescent': dynfil_gradient_descent,
     'pc': dynfil_preview_control,

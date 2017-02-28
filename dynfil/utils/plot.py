@@ -99,7 +99,7 @@ def plot_trajectories(trajectories, filename=None, title=None):
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_trajectories_from_top(trajectories, filename=None, title=None):
+def plot_trajectories_from_top(trajectories, filenames=tuple(), title=None):
     fig = plt.figure(figsize=cm2inch(14, 8))
     ax = fig.gca()
     ax.axis('equal')
@@ -135,7 +135,7 @@ def plot_trajectories_from_top(trajectories, filename=None, title=None):
     ax.set_ylabel('y [m]')
     plt.margins(x=0.1, y=0.1)
     plt.tight_layout()
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
@@ -157,7 +157,7 @@ def plot_trajectories_1d(times, trajectories, filename=None, title=None):
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_trajectories_1d_axis_combined(times, trajectories, filename=None, title=None):
+def plot_trajectories_1d_axis_combined(times, trajectories, filenames=tuple(), title=None):
     dims = len(trajectories[0].positions[0])
     fig, axes = plt.subplots(dims, sharex=True, figsize=cm2inch(14, 9))
     if title:
@@ -175,11 +175,11 @@ def plot_trajectories_1d_axis_combined(times, trajectories, filename=None, title
     axes[-1].set_xlabel('t [s]')
     axes[0].legend(loc='upper left', prop={'size': 7})
     plt.tight_layout(h_pad=0)
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
+def plot_trajectories_1d_axis(times, trajectories, filenames=tuple(), title=None):
     dims = len(trajectories[0].positions[0])
     fig, axes = plt.subplots(dims, len(trajectories), sharex=True, sharey='row', figsize=cm2inch(14, 9))
     if title:
@@ -205,7 +205,7 @@ def plot_trajectories_1d_axis(times, trajectories, filename=None, title=None):
     else:
         axes[-1].set_xlabel('t [s]')
     plt.tight_layout(h_pad=0)
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
@@ -292,7 +292,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_res_histo(data, filename=None, title=None, with_pie=False):
+def plot_res_histo(data, filenames=tuple(), title=None, with_pie=False):
     fig, axes = plt.subplots(1, len(data), figsize=cm2inch(8 * len(data), 5), sharey='row')
     if title:
         fig.suptitle(title)
@@ -308,11 +308,11 @@ def plot_res_histo(data, filename=None, title=None, with_pie=False):
     a = axes[0] if len(data) > 1 else axes
     a.set_ylabel('timesteps')
     plt.tight_layout(w_pad=0)
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_residuums(data, filename=None, title=None, with_pie=False):
+def plot_residuums(data, filenames=tuple(), title=None, with_pie=False):
     fig, axes = plt.subplots(len(data), 3 if with_pie else 2, figsize=cm2inch(14, 9), sharex='col', sharey='col')
     if title:
         fig.suptitle(title)
@@ -353,12 +353,12 @@ def plot_residuums(data, filename=None, title=None, with_pie=False):
     axes[-1, 0].set_xlabel('t[s]')
     axes[-1, 1].set_xlabel('residuum')
     plt.tight_layout(h_pad=0)
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
 def plot_comparison(residuums, filenames=tuple(), x='residuum'):
-    fig = plt.figure(figsize=cm2inch(18, 5 + 0.7 * len(residuums)))
+    fig = plt.figure(figsize=cm2inch(18, 3.5 + 0.49 * len(residuums)))
     ax = fig.gca()
     ax.set_xscale('log')
 
