@@ -357,8 +357,8 @@ def plot_residuums(data, filename=None, title=None, with_pie=False):
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_comparison(residuums, filenames=tuple()):
-    fig = plt.figure(figsize=cm2inch(18, 23))
+def plot_comparison(residuums, filenames=tuple(), x='residuum'):
+    fig = plt.figure(figsize=cm2inch(18, 5 + 0.7 * len(residuums)))
     ax = fig.gca()
     ax.set_xscale('log')
 
@@ -368,7 +368,7 @@ def plot_comparison(residuums, filenames=tuple()):
         labels=residuums.keys(),
         whis=1e10  # show min/max
     )
-    ax.set_xlabel('residuum')
+    ax.set_xlabel(x)
 
     fig.tight_layout()
 

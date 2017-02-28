@@ -91,6 +91,14 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
     )
 
 
+def calculate_jerks(chest, times):
+    jerks = np.zeros_like(chest.traj_pos_ddot)
+    for t in range(len(chest)):
+        if t > 2:
+            jerks[t] = (chest.traj_pos_ddot[t] - chest.traj_pos_ddot[t - 1]) / (times[t] - times[t - 1])
+    return jerks
+
+
 @main.main.command()
 @click.pass_context
 def evaluate(ctx):
@@ -102,6 +110,7 @@ def evaluate(ctx):
     zmp_ref = ctx.obj['zmp_ref']
 
     residuums = OrderedDict()
+    jerks = OrderedDict()
 
     # initial pose: half-sitting
     q_ini = constants.POSE_WALK_INITIAL_SIMPLE
@@ -128,6 +137,8 @@ def evaluate(ctx):
     errs = zmp_calc - zmp_ref
     normed_errors = (errs * errs).sum(axis=1) ** 0.5
     residuums['no filter'] = normed_errors
+    j = calculate_jerks(chest, timesteps)
+    jerks['no filter'] = (j * j).sum(axis=1) ** 0.5
 
     for filter_method, iterations, interpolate in CONFIGS:
         confstr = '{}-{}-{}'.format(filter_method, iterations, interpolate)
@@ -167,15 +178,26 @@ def evaluate(ctx):
                 thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zmp_filtered, chest_filtered,
                              out_dir)
 
-            errs = zmp_filtered - zmp_ref
-            normed_errors = (errs * errs).sum(axis=1) ** 0.5
-            residuums['{}-{}-{}'.format(filter_method, i + 1, interpolate)] = normed_errors
+            with status('{} - Generate data for box plots after iteration {}'.format(confstr, i + 1)):
+                errs = zmp_filtered - zmp_ref
+                normed_errors = (errs * errs).sum(axis=1) ** 0.5
+                residuums['{}-{}-{}'.format(filter_method, i + 1, interpolate)] = normed_errors
+                j = calculate_jerks(chest_filtered, timesteps)
+                jerks['{}-{}-{}'.format(filter_method, i + 1, interpolate)] = (j * j).sum(axis=1) ** 0.5
 
-    with status('Generate boxplot'):
+    with status('Generate boxplots'):
         plot.plot_comparison(
             OrderedDict(reversed(list(residuums.items()))),
             filenames=[
                 os.path.join(ctx.obj['out_dir'], 'comparison.pgf'),
                 os.path.join(ctx.obj['out_dir'], 'comparison.pdf'),
             ]
+        )
+        plot.plot_comparison(
+            OrderedDict(reversed(list(jerks.items()))),
+            filenames=[
+                os.path.join(ctx.obj['out_dir'], 'jerks.pgf'),
+                os.path.join(ctx.obj['out_dir'], 'jerks.pdf'),
+            ],
+            x=r'jerk [$m s^{-3}$]'
         )
