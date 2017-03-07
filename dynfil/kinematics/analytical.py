@@ -300,13 +300,11 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
 
         q[t, 0:3] = chest.traj_pos[t] - com_correction
         q[t, 3:6] = euler_from_matrix(chest.traj_ort[t], "123")
-        q[t, 6:12] = model.leg_vector_from_simple(lq, left=True)
-        q[t, 12:18] = model.leg_vector_from_simple(rq)
+        q[t, 6:18] = model.leg_vector_from_simple(lq, rq)
 
         if dot_ndirs:
             qdot[t, 0:3, :] = chest_dot[t, :, :]
-            qdot[t, 6:12, :] = np.array([model.leg_vector_from_simple(lq, left=True)]).T
-            qdot[t, 12:18, :] = np.array([model.leg_vector_from_simple(rq)]).T
+            qdot[t, 6:18, :] = model.leg_vector_from_simple(lqdot, rqdot)
 
         if ddot_ndirs:
             EPS = 1e-8

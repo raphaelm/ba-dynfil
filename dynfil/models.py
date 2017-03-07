@@ -35,8 +35,8 @@ class RobotModel(object):
     def get_body(self, body_id):
         return BodyTrajectory(self.model, body_id)
 
-    def leg_vector_from_simple(self, lq, left=False):
-        return lq
+    def leg_vector_from_simple(self, lq, rq):
+        return np.hstack((rq.T, lq.T)).T
 
     @property
     def qdot_size(self):
@@ -77,14 +77,20 @@ class HeiCubModel(RobotModel):
     foot_distance = 0.075 * 2
     com_height = 0.40
 
-    def leg_vector_from_simple(self, lq, left=False):
+    def leg_vector_from_simple(self, lq, rq):
         return np.array([
             lq[2],  # l_hip_1 = q4
-            lq[1] * (-1 if left else 1),  # l_hip_2 = q3
+            - lq[1],  # l_hip_2 = q3
             lq[0],  # l_upper_leg = q0
             - lq[3],  # l_lower_leg = q5
             lq[4],  # l_ankle_1 = q6
-            - lq[5] * (-1 if left else 1),  # l_ankle_2 = q7
+            lq[5],  # l_ankle_2 = q7
+            rq[2],  # l_hip_1 = q4
+            rq[1],  # l_hip_2 = q3
+            rq[0],  # l_upper_leg = q0
+            - rq[3],  # l_lower_leg = q5
+            rq[4],  # l_ankle_1 = q6
+            - rq[5],  # l_ankle_2 = q7
         ])
 
 
