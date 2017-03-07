@@ -11,10 +11,10 @@ def calculate_zmp_trajectory(model, q, qdot, qddot, chest):
 
     for t in range(len(q)):  # Iterate over timesteps
         # Calculate tau using rbdl
-        tau = np.zeros(model.qdot_size)
+        tau = np.zeros(model.model.qdot_size)
         # TODO check if kinematics are updated?
         # rbdl.UpdateKinematics is not available in wrapper
-        rbdl.InverseDynamics(model, q[t], qdot[t], qddot[t], tau)
+        rbdl.InverseDynamics(model.model, q[t], qdot[t], qddot[t], tau)
 
         # NOTE this only works when the first joint is a floating base joint
         F_ext = tau[0:3]
@@ -27,7 +27,7 @@ def calculate_zmp_trajectory(model, q, qdot, qddot, chest):
         # Calculate CoM position and transform to ZMP world coordinate
         # TODO is this correct?
         zmp_pos = rbdl.CalcBodyToBaseCoordinates(
-            model, q[t], chest.id, chest.body_point
+            model.model, q[t], chest.id, chest.body_point
         ) + _zmp
 
         zmp_pos[2] = 0

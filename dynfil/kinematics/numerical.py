@@ -45,12 +45,12 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole):
     for t in range(len(chest)):  # Iterate over timesteps
         q_before = q[t - 1] if t > 0 else q_ini
 
-        #if t == 0:
-        #    move_chest_body_to_com(model, q_before, chest, lsole, rsole)
+        if t == 0:
+            move_chest_body_to_com(model, q_before, chest, lsole, rsole)
 
-        #com_tmp = np.zeros(3)
-        #rbdl.CalcCenterOfMass(model, q_before, np.zeros(model.dof_count), com_tmp)
-        #chest.body_point = rbdl.CalcBaseToBodyCoordinates(model, q_before, chest.id, com_tmp)
+        com_tmp = np.zeros(3)
+        rbdl.CalcCenterOfMass(model, q_before, np.zeros(model.dof_count), com_tmp)
+        chest.body_point = rbdl.CalcBaseToBodyCoordinates(model, q_before, chest.id, com_tmp)
         cs = rbdl.InverseKinematicsConstraintSet()
         cs.damper = 1e-4
         cs.AddFullConstraint(*chest.to_constraint(t))

@@ -9,7 +9,7 @@ their derivatives will be ignored.
 import numpy as np
 import rbdl
 
-from dynfil.utils.angles import rotx, roty, rotx_dot, roty_dot
+from dynfil.utils.angles import rotx, roty, rotx_dot, roty_dot, euler_from_matrix
 
 
 def fd_helper(dot_ndirs, func, *argpairs):
@@ -228,17 +228,21 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot, debu
 
 
 def ik_constants(model, q_ini):
-    # TODO: Center of mass corrections!
-    rbdl.UpdateKinematics(model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
+    rbdl.UpdateKinematics(model.model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
 
-    root_x = model.X_base[model.GetBodyId("pelvis")]
-    hipr_x = model.X_base[model.GetBodyId("hip_right")]
-    kneer_x = model.X_base[model.GetBodyId("knee_right")]
-    footr_x = model.X_base[model.GetBodyId("ankle_right")]
+    com_tmp = np.zeros(3)
+    rbdl.CalcCenterOfMass(model.model, q_ini, np.zeros(model.dof_count), com_tmp)
+
+    root_x = model.model.X_base[model.model.GetBodyId(model.chest_body_id)]
+    hipr_x = model.model.X_base[model.model.GetBodyId(model.rhip_body_id)]
+    kneer_x = model.model.X_base[model.model.GetBodyId(model.rknee_body_id)]
+    footr_x = model.model.X_base[model.model.GetBodyId(model.rankle_body_id)]
+
+    com_correction = com_tmp - root_x.r
     D = hipr_x.r - root_x.r
     A = np.linalg.norm(hipr_x.r - kneer_x.r)
     B = np.linalg.norm(kneer_x.r - footr_x.r)
-    return D, A, B
+    return D, A, B, com_correction
 
 
 def ik_trajectory(model, q_ini, chest, lsole, rsole,
@@ -267,7 +271,7 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
             assert rsole_ddot.shape == (len(chest), 3, ddot_ndirs)
             assert lsole_ddot.shape == (len(chest), 3, ddot_ndirs)
 
-    q = np.zeros((len(chest), model.q_size))
+    q = np.zeros((len(chest), model.dof_count))
     if dot_ndirs:
         qdot = np.zeros((len(chest), model.dof_count, dot_ndirs or 1))
     else:
@@ -277,30 +281,32 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
     else:
         qddot = None
 
-    D, A, B = ik_constants(model, q_ini)
+    D, A, B, com_correction = ik_constants(model, q_ini)
+    Dleft = np.array([D[0], -D[1], D[2]])
 
     for t in range(len(q)):
         lq, lqdot, lqddot = ik_one_leg(
-            -D, A, B,
-            chest.traj_pos[t], chest.traj_ort[t],
+            Dleft, A, B,
+            chest.traj_pos[t] - com_correction, chest.traj_ort[t],
             lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
             chest_dot[t], lsole_dot[t]
         )
         rq, rqdot, rqddot = ik_one_leg(
             D, A, B,
-            chest.traj_pos[t], chest.traj_ort[t],
+            chest.traj_pos[t] - com_correction, chest.traj_ort[t],
             rsole.traj_pos[t] + rsole.body_point, rsole.traj_ort[t],
             chest_dot[t], rsole_dot[t]
         )
 
-        q[t, 0:3] = chest.traj_pos[t]
-        q[t, 6:12] = rq
-        q[t, 12:18] = lq
+        q[t, 0:3] = chest.traj_pos[t] - com_correction
+        q[t, 3:6] = euler_from_matrix(chest.traj_ort[t], "123")
+        q[t, 6:12] = model.leg_vector_from_simple(lq, left=True)
+        q[t, 12:18] = model.leg_vector_from_simple(rq)
 
         if dot_ndirs:
             qdot[t, 0:3, :] = chest_dot[t, :, :]
-            qdot[t, 6:12, :] = rqdot
-            qdot[t, 12:18, :] = lqdot
+            qdot[t, 6:12, :] = np.array([model.leg_vector_from_simple(lq, left=True)]).T
+            qdot[t, 12:18, :] = np.array([model.leg_vector_from_simple(rq)]).T
 
         if ddot_ndirs:
             EPS = 1e-8
@@ -313,7 +319,7 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
                 lsole_dh[:, 0] = lsole_dot[t, :, 0] + EPS * lsole_ddot[t, :, idir]
                 rsole_dh[:, 0] = rsole_dot[t, :, 0] + EPS * rsole_ddot[t, :, idir]
                 __, lqdot_h, __ = ik_one_leg(
-                    -D, A, B,
+                    Dleft, A, B,
                     chest.traj_pos[t], chest.traj_ort[t],
                     lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
                     chest_dh, lsole_dh

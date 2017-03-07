@@ -40,6 +40,6 @@ def com_trajectory(model, chest, q):
     com = np.zeros((len(q), 3))
     for t in range(len(q)):
         com_tmp = np.zeros(3)
-        rbdl.CalcCenterOfMass(model, q[t], np.zeros(model.dof_count), com_tmp)
+        rbdl.CalcCenterOfMass(model.model, q[t], np.zeros(model.dof_count), com_tmp)
         com[t] = com_tmp
     return com

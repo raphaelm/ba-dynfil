@@ -6,11 +6,13 @@ import warnings
 
 from dynfil.bodies import BodyTrajectory
 from dynfil.kinematics.numerical import IKConvergenceWarning
+from dynfil.models import HeiCubModel
+from dynfil.models import SimpleModel
 from dynfil.utils.cli import status
 
 
 @click.group()
-@click.option('--model', default='data/models/ik_test.lua', help='Model file')
+@click.option('--model', default='simple', help='Model', type=click.Choice(['simple', 'heicub']))
 @click.option('--trajectory', required=True, help='Trajectory file')
 @click.option('--csv-delim', default=' ', help='CSV delimiter of trajectory file')
 @click.option('--out-dir', default='out/', help='Output directory')
@@ -26,7 +28,10 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
-    model = rbdl.loadModel(model)
+    if model == "heicub":
+        model = HeiCubModel()
+    elif model == "simple":
+        model = SimpleModel()
 
     if not w:
         warnings.simplefilter("ignore", IKConvergenceWarning)
@@ -38,21 +43,22 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
         pgdata = np.genfromtxt(trajectory, delimiter=csv_delim, dtype=None)
         timesteps = pgdata[:, 0]
 
-        chest = BodyTrajectory(model, model.GetBodyId("pelvis"))
+        chest = model.get_body(model.chest_body_id)
 
-        lsole = BodyTrajectory(model, model.GetBodyId("ankle_left"))
-        lsole.body_point = np.array([0, 0, 0.1])
-        rsole = BodyTrajectory(model, model.GetBodyId("ankle_right"))
-        rsole.body_point = np.array([0, 0, 0.1])
+        lsole = model.get_body(model.lfoot_body_id)
+        lsole.body_point = model.foot_body_point
 
-        # HeiCub: offset_angles = np.array([np.pi/2., 0.0, np.pi/2.])
-        chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7])  # , offset_angles=offset_angles)
+        rsole = model.get_body(model.rfoot_body_id)
+        rsole.body_point = model.foot_body_point
+
+        chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7], offset_angles=model.chest_offset_angles)
         chest.traj_pos_dot = pgdata[:, 28:31]
         chest.traj_pos_ddot = pgdata[:, 37:40]
 
         lsole.set_trajectories(pgdata[:, 7:10], pgdata[:, 10:13])
         lsole.traj_pos_dot = pgdata[:, 22:25]
         lsole.traj_pos_ddot = pgdata[:, 31:34]
+
         rsole.set_trajectories(pgdata[:, 13:16], pgdata[:, 16:19])
         rsole.traj_pos_dot = pgdata[:, 25:28]
         rsole.traj_pos_ddot = pgdata[:, 34:37]

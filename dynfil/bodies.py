@@ -11,7 +11,7 @@ class BodyTrajectory(object):
 
     def __init__(self, model, body_id):
         self.model = model
-        self.id = body_id
+        self.id = self.model.GetBodyId(body_id) if isinstance(body_id, str) else body_id
         self.body_point = np.array([0.0, 0.0, 0.0])
         self.traj_pos = np.array([])
         self.traj_ort = np.array([])

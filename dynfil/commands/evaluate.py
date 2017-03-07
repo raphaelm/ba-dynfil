@@ -161,8 +161,7 @@ def evaluate(ctx):
     jerks = OrderedDict()
     cddots = OrderedDict()
 
-    # initial pose: half-sitting
-    q_ini = constants.POSE_WALK_INITIAL_SIMPLE
+    q_ini = model.initial_pose_walking
 
     # First ZMP calculation
     with status('Calculate ZMP from forward run'):
@@ -224,9 +223,10 @@ def evaluate(ctx):
 
                     # Save meshup files
                     with status('{} - Export MeshUp files'.format(confstr)):
-                        save_to_meshup(os.path.join(ctx.obj['out_dir'], 'inverse_from_pg.csv'), timesteps, q_calc)
+                        save_to_meshup(os.path.join(ctx.obj['out_dir'], 'inverse_from_pg.csv'), timesteps, q_calc,
+                                       header=model.meshup_header)
                         save_to_meshup(os.path.join(ctx.obj['out_dir'], 'inverse_after_filter.csv'), timesteps,
-                                       q_filtered)
+                                       q_filtered, header=model.meshup_header)
 
                     # Generatae plots
                     with status('{} - Generate plots'.format(confstr)):

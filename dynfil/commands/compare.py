@@ -22,8 +22,7 @@ def compare_interpolation(ctx, ik_method):
     rsole = ctx.obj['rsole']
     timesteps = ctx.obj['timesteps']
 
-    # initial pose: half-sitting
-    q_ini = constants.POSE_HALF_SITTING_HEICUB
+    q_ini = model.initial_pose_walking
 
     with status('Inverse Kinematics without interpolation'):
         q_calc_raw, qdot_calc_raw, qddot_calc_raw = kinematics.inverse_with_derivatives(
@@ -77,7 +76,7 @@ def compare_ik(ctx):
     timesteps = ctx.obj['timesteps']
 
     # initial pose: half-sitting
-    q_ini = constants.POSE_HALF_SITTING_HEICUB
+    q_ini = model.initial_pose_walking
 
     with status('Run numerical IK'):
         q_calc = kinematics.inverse(
