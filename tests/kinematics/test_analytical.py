@@ -35,8 +35,8 @@ def ik_one_leg_fd(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot):
 
 
 def minimal_trajectory(model):
-    chest = BodyTrajectory(model, model.GetBodyId("pelvis"))
-    rsole = BodyTrajectory(model, model.GetBodyId("ankle_right"))
+    chest = BodyTrajectory(model.model, model.model.GetBodyId("pelvis"))
+    rsole = BodyTrajectory(model.model, model.model.GetBodyId("ankle_right"))
 
     chest.set_trajectories(np.array([[0, 0, 0.6]]), np.array([[0, 0, 0]]))
     rsole.set_trajectories(np.array([[-0.2, -0.25, 0]]), np.array([[0, 0, 0]]))
@@ -53,8 +53,8 @@ def minimal_trajectory(model):
 
 
 def test_one_leg_consistency_first_order_derivative(model):
-    D, A, B = ik_constants(model, constants.POSE_WALK_INITIAL_SIMPLE)
     chest, rsole, chest_dot, rsole_dot = minimal_trajectory(model)
+    D, A, B, com_correction = ik_constants(model, model.initial_pose_walking, chest)
     q_fd, qdot_fd, __ = ik_one_leg_fd(
         D, A, B,
         chest.traj_pos[0], chest.traj_ort[0],

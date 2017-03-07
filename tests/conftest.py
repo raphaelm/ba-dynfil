@@ -1,8 +1,9 @@
 import rbdl
 import pytest
 
+from dynfil.models import SimpleModel
+
 
 @pytest.fixture
 def model():
-    filename = "./data/models/ik_test.lua"
-    return rbdl.loadModel(filename)
+    return SimpleModel()
