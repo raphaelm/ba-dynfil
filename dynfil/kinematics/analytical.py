@@ -318,13 +318,13 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
                 rsole_dh[:, 0] = rsole_dot[t, :, 0] + EPS * rsole_ddot[t, :, idir]
                 __, lqdot_h, __ = ik_one_leg(
                     Dleft, A, B,
-                    chest.traj_pos[t], chest.traj_ort[t],
+                    chest.traj_pos[t] - com_correction, chest.traj_ort[t],
                     lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
                     chest_dh, lsole_dh
                 )
                 __, rqdot_h, __ = ik_one_leg(
                     D, A, B,
-                    chest.traj_pos[t], chest.traj_ort[t],
+                    chest.traj_pos[t] - com_correction, chest.traj_ort[t],
                     rsole.traj_pos[t] + rsole.body_point, rsole.traj_ort[t],
                     chest_dh, rsole_dh
                 )
