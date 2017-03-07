@@ -12,7 +12,7 @@ def inverse(model, q_ini, chest, lsole, rsole, method='numerical'):
     if method == 'numerical':
         return numerical.ik_trajectory(model, q_ini, chest, lsole, rsole)
     else:
-        return numerical.ik_trajectory(model, q_ini, chest, lsole, rsole)
+        return analytical.ik_trajectory(model, q_ini, chest, lsole, rsole)[0]
 
 
 def inverse_with_derivatives(model, q_ini, chest, lsole, rsole, times, method='numerical', interpolate='none'):
