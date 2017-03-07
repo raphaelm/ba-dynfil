@@ -11,8 +11,8 @@ def _abstract_property(self):
 
 
 class RobotModel(object):
-    chest_offset_angles = np.array([0, 0, 0])
-    foot_body_point = np.array([0, 0, 0])
+    chest_offset_angles = np.array([0., 0., 0.])
+    foot_body_point = np.array([0., 0., 0.])
     model_file = _abstract_property
     chest_body_id = _abstract_property
     lfoot_body_id = _abstract_property
