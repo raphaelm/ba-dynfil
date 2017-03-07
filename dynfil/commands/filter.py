@@ -87,7 +87,6 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
 
     # Generate plots
     with status('Generate plots'):
-        """
         plot.plot_q_values(
             timesteps,
             (q_calc, q_filtered),
@@ -110,6 +109,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             title='Filter results on qddot'
         )
 
+        """
         plot.plot_trajectories(
             trajectories=[
                 plot.PlotTrajectory(positions=chest.traj_pos, rotations=chest.traj_ort, label='PG: CoM', color='y'),
@@ -199,6 +199,44 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
             ],
             filenames=[os.path.join(ctx.obj['out_dir'], 'trajectories_waist_with_filtered.pgf')],
             # title='2D Trajectories on waist height ground (with filtered)'
+        )
+
+        plot.plot_trajectories_1d_axis_combined(
+            timesteps,
+            trajectories=[
+                plot.PlotTrajectory(positions=chest.traj_pos[:, 0:2], rotations=None, label='CoM from PG', color='r',
+                                    linestyle=(0, (5, 1))),
+                plot.PlotTrajectory(positions=com_calc[:, 0:2], rotations=None, label='CoM unfiltered', color='c',
+                                    linestyle=(0, (1, 1))),
+                plot.PlotTrajectory(positions=chest_filtered.traj_pos[:, 0:2], rotations=None, label='CoM filtered',
+                                    color='k'),
+            ],
+            filenames=[os.path.join(ctx.obj['out_dir'], 'com_filtered.pgf')],
+            # title='ZMP components'
+        )
+
+        plot.plot_trajectories_1d_axis_combined(
+            timesteps,
+            trajectories=[
+                plot.PlotTrajectory(positions=chest.traj_pos_dot[:, 0:2], rotations=None, label='dCoM from PG', color='r',
+                                    linestyle=(0, (5, 1))),
+                plot.PlotTrajectory(positions=chest_filtered.traj_pos_dot[:, 0:2], rotations=None, label='dCoM filtered',
+                                    color='k'),
+            ],
+            filenames=[os.path.join(ctx.obj['out_dir'], 'com_dot_filtered.pgf')],
+            # title='ZMP components'
+        )
+
+        plot.plot_trajectories_1d_axis_combined(
+            timesteps,
+            trajectories=[
+                plot.PlotTrajectory(positions=chest.traj_pos_ddot[:, 0:2], rotations=None, label='ddCoM from PG', color='r',
+                                    linestyle=(0, (5, 1))),
+                plot.PlotTrajectory(positions=chest_filtered.traj_pos_ddot[:, 0:2], rotations=None, label='ddCoM filtered',
+                                    color='k'),
+            ],
+            filenames=[os.path.join(ctx.obj['out_dir'], 'com_ddot_filtered.pgf')],
+            # title='ZMP components'
         )
 
         plot.plot_trajectories_1d_axis_combined(
