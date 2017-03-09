@@ -432,6 +432,32 @@ model = {
                 meshes.foot_left
             },
         },
+        {
+            name    = "sole_left",
+            parent  = "ankle_left",
+            joint   = joints.fixed,
+            joint_frame = {
+                r = { 0.5 * constants.foot_l - 0.5 * constants.shank_w, 0.0, -constants.foot_h},
+                E = {
+                    { 1.0, 0.0, 0.0},
+                    { 0.0, 1.0, 0.0},
+                    { 0.0, 0.0, 1.0},
+                },
+            },
+        },
+        {
+            name    = "sole_right",
+            parent  = "ankle_right",
+            joint   = joints.fixed,
+            joint_frame = {
+                r = { 0.5 * constants.foot_l - 0.5 * constants.shank_w, 0.0, -constants.foot_h},
+                E = {
+                    { 1.0, 0.0, 0.0},
+                    { 0.0, 1.0, 0.0},
+                    { 0.0, 0.0, 1.0},
+                },
+            },
+        },
     },
 }
 

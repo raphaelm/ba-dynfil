@@ -12,7 +12,6 @@ def _abstract_property(self):
 
 class RobotModel(object):
     chest_offset_angles = np.array([0., 0., 0.])
-    foot_body_point = np.array([0., 0., 0.])
     model_file = _abstract_property
     chest_body_id = _abstract_property
     lfoot_body_id = _abstract_property
@@ -49,7 +48,7 @@ class RobotModel(object):
 
 class HeiCubModel(RobotModel):
     model_file = "data/models/iCubHeidelberg01_new_legs.urdf"
-    chest_body_id = "chest"
+    chest_body_id = "root_link"
     lfoot_body_id = "l_sole"
     rfoot_body_id = "r_sole"
     lankle_body_id = "l_ankle_1"
@@ -97,15 +96,14 @@ class HeiCubModel(RobotModel):
 class SimpleModel(RobotModel):
     model_file = "data/models/ik_test.lua"
     chest_body_id = "pelvis"
-    lfoot_body_id = "ankle_left"
-    rfoot_body_id = "ankle_right"
+    lfoot_body_id = "sole_left"
+    rfoot_body_id = "sole_right"
     lankle_body_id = "ankle_left"
     rankle_body_id = "ankle_right"
     lknee_body_id = "knee_left"
     rknee_body_id = "knee_right"
     lhip_body_id = "hip_left"
     rhip_body_id = "hip_right"
-    foot_body_point = np.array([0, 0, 0.1])
     initial_pose_walking = np.array([
         0.000000000000000000, 0.000000000000000000, 0.680000000000000049,
         0.000000000000000000, 0.000000000000000000, 0.000000000000000000,

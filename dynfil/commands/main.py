@@ -44,12 +44,8 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
         timesteps = pgdata[:, 0]
 
         chest = model.get_body(model.chest_body_id)
-
         lsole = model.get_body(model.lfoot_body_id)
-        lsole.body_point = model.foot_body_point
-
         rsole = model.get_body(model.rfoot_body_id)
-        rsole.body_point = model.foot_body_point
 
         chest.set_trajectories(pgdata[:, 1:4], pgdata[:, 4:7], offset_angles=model.chest_offset_angles)
         chest.traj_pos_dot = pgdata[:, 28:31]

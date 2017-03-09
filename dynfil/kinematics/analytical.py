@@ -227,7 +227,7 @@ def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot, debu
     return q, qdot, qddot
 
 
-def ik_constants(model, q_ini):
+def ik_constants(model, q_ini, chest):
     rbdl.UpdateKinematics(model.model, q_ini, np.zeros(model.qdot_size), np.zeros(model.qdot_size))
 
     com_tmp = np.zeros(3)
@@ -236,13 +236,29 @@ def ik_constants(model, q_ini):
     root_x = model.model.X_base[model.model.GetBodyId(model.chest_body_id)]
     hipr_x = model.model.X_base[model.model.GetBodyId(model.rhip_body_id)]
     kneer_x = model.model.X_base[model.model.GetBodyId(model.rknee_body_id)]
-    footr_x = model.model.X_base[model.model.GetBodyId(model.rankle_body_id)]
+    ankler_x = model.model.X_base[model.model.GetBodyId(model.rankle_body_id)]
+
+    footr_x = rbdl.CalcBodyToBaseCoordinates(
+        model.model, q_ini, model.model.GetBodyId(model.rfoot_body_id), np.array([0., 0., 0.])
+    )
+
+    """
+    chest.body_point = rbdl.CalcBaseToBodyCoordinates(
+        model.model, q_ini, model.model.GetBodyId(model.chest_body_id), com_tmp
+    )
+    """
 
     com_correction = com_tmp - root_x.r
+    if model.rfoot_body_id != model.rankle_body_id:
+        foot_correction = footr_x - ankler_x.r
+        foot_correction[0] = 0.
+        foot_correction[1] = 0.
+    else:
+        foot_correction = np.zeros(3)
     D = hipr_x.r - root_x.r
     A = np.linalg.norm(hipr_x.r - kneer_x.r)
-    B = np.linalg.norm(kneer_x.r - footr_x.r)
-    return D, A, B, com_correction
+    B = np.linalg.norm(kneer_x.r - ankler_x.r)
+    return D, A, B, com_correction, foot_correction
 
 
 def ik_trajectory(model, q_ini, chest, lsole, rsole,
@@ -281,20 +297,20 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
     else:
         qddot = None
 
-    D, A, B, com_correction = ik_constants(model, q_ini)
+    D, A, B, com_correction, foot_correction = ik_constants(model, q_ini, chest)
     Dleft = np.array([D[0], -D[1], D[2]])
 
     for t in range(len(q)):
         lq, lqdot, lqddot = ik_one_leg(
             Dleft, A, B,
             chest.traj_pos[t] - com_correction, chest.traj_ort[t],
-            lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
+            lsole.traj_pos[t] - foot_correction, lsole.traj_ort[t],
             chest_dot[t], lsole_dot[t]
         )
         rq, rqdot, rqddot = ik_one_leg(
             D, A, B,
             chest.traj_pos[t] - com_correction, chest.traj_ort[t],
-            rsole.traj_pos[t] + rsole.body_point, rsole.traj_ort[t],
+            rsole.traj_pos[t] - foot_correction, rsole.traj_ort[t],
             chest_dot[t], rsole_dot[t]
         )
 
@@ -319,13 +335,13 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
                 __, lqdot_h, __ = ik_one_leg(
                     Dleft, A, B,
                     chest.traj_pos[t] - com_correction, chest.traj_ort[t],
-                    lsole.traj_pos[t] + lsole.body_point, lsole.traj_ort[t],
+                    lsole.traj_pos[t] - foot_correction, lsole.traj_ort[t],
                     chest_dh, lsole_dh
                 )
                 __, rqdot_h, __ = ik_one_leg(
                     D, A, B,
                     chest.traj_pos[t] - com_correction, chest.traj_ort[t],
-                    rsole.traj_pos[t] + rsole.body_point, rsole.traj_ort[t],
+                    rsole.traj_pos[t] - foot_correction, rsole.traj_ort[t],
                     chest_dh, rsole_dh
                 )
                 qddot[t, 6:12, idir] = (rqdot_h[:, 0] - rqdot[:, 0]) / EPS
