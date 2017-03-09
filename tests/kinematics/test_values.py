@@ -31,39 +31,62 @@ def test_numerical_vs_analytical(any_model_with_trajectory):
 def test_end_effectors(any_model_with_trajectory, ik_method):
     model, traj = any_model_with_trajectory
     timesteps, chest, rsole, lsole = traj
+    chest.traj_pos[0, 0:2] = 0  # Force y-symmetry to ease debugging
     q_calc_a, __, __ = kinematics.inverse_with_derivatives(
         model, model.initial_pose_walking, chest, lsole, rsole, timesteps,
         interpolate='none', method=ik_method
     )
     rbdl.UpdateKinematics(model.model, q_calc_a[0], np.zeros(model.qdot_size), np.zeros(model.qdot_size))
 
-    print "q", q_calc_a[0]
+    print "leg1", q_calc_a[0][6:12]
+    print "leg2", q_calc_a[0][12:18]
+
     if isinstance(model, SimpleModel):
-        print "pelvis", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("pelvis"), np.zeros(3))
-        print "right_hip", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("hip_right"), np.zeros(3))
-        print "left_hip", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("hip_left"), np.zeros(3))
-        print "right_knee", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("knee_right"), np.zeros(3))
-        print "left_knee", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("knee_left"), np.zeros(3))
-        print "right_ankle", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("ankle_right"), np.zeros(3))
-        print "left_ankle", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("ankle_left"), np.zeros(3))
-        print "right_sole", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("sole_right"), np.zeros(3))
-        print "left_sole", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("sole_left"), np.zeros(3))
+        print "pelvis", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("pelvis"),
+                                                       np.zeros(3))
+        print "right_hip", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("hip_right"),
+                                                          np.zeros(3))
+        print "left_hip", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("hip_left"),
+                                                         np.zeros(3))
+        print "right_knee", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0],
+                                                           model.model.GetBodyId("knee_right"), np.zeros(3))
+        print "left_knee", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("knee_left"),
+                                                          np.zeros(3))
+        print "right_ankle", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0],
+                                                            model.model.GetBodyId("ankle_right"), np.zeros(3))
+        print "left_ankle", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0],
+                                                           model.model.GetBodyId("ankle_left"), np.zeros(3))
+        print "right_sole", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0],
+                                                           model.model.GetBodyId("sole_right"), np.zeros(3))
+        print "left_sole", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("sole_left"),
+                                                          np.zeros(3))
     else:
-        print "root_link", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("root_link"), np.zeros(3))
-        print "l_hip_1", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_hip_1"), np.zeros(3))
-        print "r_hip_1", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_hip_1"), np.zeros(3))
-        print "l_hip_2", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_hip_2"), np.zeros(3))
-        print "r_hip_2", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_hip_2"), np.zeros(3))
-        print "l_upper_leg", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_upper_leg"), np.zeros(3))
-        print "r_upper_leg", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_upper_leg"), np.zeros(3))
-        print "l_lower_leg", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_lower_leg"), np.zeros(3))
-        print "r_lower_leg", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_lower_leg"), np.zeros(3))
-        print "l_ankle_1", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_ankle_1"), np.zeros(3))
-        print "r_ankle_1", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_ankle_1"), np.zeros(3))
-        print "l_ankle_2", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_ankle_2"), np.zeros(3))
-        print "r_ankle_2", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_ankle_2"), np.zeros(3))
-        print "l_sole", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("l_sole"), np.zeros(3))
-        print "r_sole", rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId("r_sole"), np.zeros(3))
+        from mpl_toolkits.mplot3d import Axes3D
+        import matplotlib.pyplot as plt
+
+        lines = [
+            [
+                'root_link',
+                'l_hip_1', 'l_hip_2', 'l_upper_leg', 'l_lower_leg', 'l_ankle_1', 'l_ankle_2', 'l_sole',
+            ],
+            [
+                'root_link',
+                'r_hip_1', 'r_hip_2', 'r_upper_leg', 'r_lower_leg', 'r_ankle_1', 'r_ankle_2', 'r_sole',
+            ]
+        ]
+        fig = plt.figure(figsize=(11.69, 8.27))
+        ax = fig.gca(projection='3d')
+        ax.axis('equal')
+        for line in lines:
+            points = np.zeros((len(line), 3))
+
+            for i, b in enumerate(line):
+                p = rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], model.model.GetBodyId(b), np.zeros(3))
+                print b, p
+                points[i, :] = p
+
+            ax.plot(points[:, 0], points[:, 1], points[:, 2], markersize=3, marker='o')
+        #plt.show()
 
     rsole_pos = rbdl.CalcBodyToBaseCoordinates(model.model, q_calc_a[0], rsole.id, np.zeros(3))
     np.testing.assert_allclose(rsole_pos, rsole.traj_pos[0], rtol=RTOL, atol=ATOL)
