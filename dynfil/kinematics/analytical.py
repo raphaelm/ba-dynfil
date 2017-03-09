@@ -295,13 +295,14 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
         qddot = None
 
     D, A, B, com_correction, foot_correction = ik_constants(model, q_ini, chest)
-    Dleft = np.array([D[0], -D[1], D[2]])
+    Dleft = D * np.array([1, -1, 1])
+    foot_correction_left = foot_correction * np.array([1, -1, 1])
 
     for t in range(len(q)):
         lq, lqdot, lqddot = ik_one_leg(
             Dleft, A, B,
             chest.traj_pos[t] - com_correction, chest.traj_ort[t],
-            lsole.traj_pos[t] - foot_correction, lsole.traj_ort[t],
+            lsole.traj_pos[t] - foot_correction_left, lsole.traj_ort[t],
             chest_dot[t], lsole_dot[t]
         )
         rq, rqdot, rqddot = ik_one_leg(
@@ -332,7 +333,7 @@ def ik_trajectory(model, q_ini, chest, lsole, rsole,
                 __, lqdot_h, __ = ik_one_leg(
                     Dleft, A, B,
                     chest.traj_pos[t] - com_correction, chest.traj_ort[t],
-                    lsole.traj_pos[t] - foot_correction, lsole.traj_ort[t],
+                    lsole.traj_pos[t] - foot_correction_left, lsole.traj_ort[t],
                     chest_dh, lsole_dh
                 )
                 __, rqdot_h, __ = ik_one_leg(
