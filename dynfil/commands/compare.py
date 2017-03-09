@@ -94,7 +94,7 @@ def compare_ik(ctx):
             timesteps, (q_calc, q_calc_a),
             labels=('numerical', 'analytical'),
             filename=os.path.join(ctx.obj['out_dir'], 'compare_kinematics.pdf'),
-            title='Interpolation results q'
+            title='IK results (q)'
         )
 
     if ctx.obj['show']:
