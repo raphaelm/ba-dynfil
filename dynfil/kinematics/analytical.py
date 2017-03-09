@@ -242,19 +242,16 @@ def ik_constants(model, q_ini, chest):
         model.model, q_ini, model.model.GetBodyId(model.rfoot_body_id), np.array([0., 0., 0.])
     )
 
-    """
     chest.body_point = rbdl.CalcBaseToBodyCoordinates(
         model.model, q_ini, model.model.GetBodyId(model.chest_body_id), com_tmp
     )
-    """
 
     com_correction = com_tmp - root_x.r
     if model.rfoot_body_id != model.rankle_body_id:
         foot_correction = footr_x - ankler_x.r
-        foot_correction[0] = 0.
-        foot_correction[1] = 0.
     else:
         foot_correction = np.zeros(3)
+
     D = hipr_x.r - root_x.r
     A = np.linalg.norm(hipr_x.r - kneer_x.r)
     B = np.linalg.norm(kneer_x.r - ankler_x.r)
