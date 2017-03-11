@@ -94,7 +94,7 @@ class HeiCubModel(RobotModel):
 
 
 class SimpleModel(RobotModel):
-    model_file = "data/models/ik_test.lua"
+    model_file = "data/models/simple_model.lua"
     chest_body_id = "pelvis"
     lfoot_body_id = "sole_left"
     rfoot_body_id = "sole_right"
@@ -116,3 +116,13 @@ class SimpleModel(RobotModel):
     step_length = 0.2
     foot_distance = 0.25 * 2
     com_height = 0.60
+
+
+class SimpleModelLX5(SimpleModel):
+    model_file = "data/models/simple_model_legsx5.lua"
+    com_height = 0.65
+
+
+class SimpleModelLX10(SimpleModel):
+    model_file = "data/models/simple_model_legsx10.lua"
+    com_height = 0.70
