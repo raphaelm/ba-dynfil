@@ -3,7 +3,7 @@ import os
 import click
 import numpy as np
 
-from dynfil.models import HeiCubModel, SimpleModelLX5, SimpleModelLX10
+from dynfil.models import HeiCubModel, SimpleModelLX5, SimpleModelLX10, SimpleModelLX2
 from dynfil.models import SimpleModel
 from dynfil.previewcontrol import online_preview_control
 from dynfil.utils import plot
@@ -82,13 +82,15 @@ def zmp_shift(pos_from, pos_to, tlen):
 
 @click.command()
 @click.option('--model', default='simple', help='Model', type=click.Choice(['simple', 'heicub', 'simplelx5',
-                                                                            'simplelx10']))
+                                                                            'simplelx10', 'simplelx2']))
 @click.option('--out-dir', default='out/', help='Output directory')
 def main(model, out_dir):
     if model == "heicub":
         model = HeiCubModel()
     elif model == "simple":
         model = SimpleModel()
+    elif model == "simplelx2":
+        model = SimpleModelLX2()
     elif model == "simplelx5":
         model = SimpleModelLX5()
     elif model == "simplelx10":

@@ -6,14 +6,14 @@ import warnings
 
 from dynfil.bodies import BodyTrajectory
 from dynfil.kinematics.numerical import IKConvergenceWarning
-from dynfil.models import HeiCubModel, SimpleModelLX5, SimpleModelLX10
+from dynfil.models import HeiCubModel, SimpleModelLX5, SimpleModelLX10, SimpleModelLX2
 from dynfil.models import SimpleModel
 from dynfil.utils.cli import status
 
 
 @click.group()
 @click.option('--model', default='simple', help='Model', type=click.Choice(['simple', 'heicub', 'simplelx5',
-                                                                            'simplelx10']))
+                                                                            'simplelx10', 'simplelx2']))
 @click.option('--trajectory', required=True, help='Trajectory file')
 @click.option('--csv-delim', default=' ', help='CSV delimiter of trajectory file')
 @click.option('--out-dir', default='out/', help='Output directory')
@@ -33,6 +33,8 @@ def main(ctx, model, trajectory, out_dir, show, csv_delim, w):
         model = HeiCubModel()
     elif model == "simple":
         model = SimpleModel()
+    elif model == "simplelx2":
+        model = SimpleModelLX2()
     elif model == "simplelx5":
         model = SimpleModelLX5()
     elif model == "simplelx10":

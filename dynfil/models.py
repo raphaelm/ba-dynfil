@@ -118,6 +118,11 @@ class SimpleModel(RobotModel):
     com_height = 0.60
 
 
+class SimpleModelLX2(SimpleModel):
+    model_file = "data/models/simple_model_legsx2.lua"
+    com_height = 0.625
+
+
 class SimpleModelLX5(SimpleModel):
     model_file = "data/models/simple_model_legsx5.lua"
     com_height = 0.65

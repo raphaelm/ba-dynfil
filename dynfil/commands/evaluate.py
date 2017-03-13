@@ -4,7 +4,7 @@ from collections import namedtuple, OrderedDict
 import click
 import numpy as np
 
-from dynfil import constants, zmp, kinematics, filter
+from dynfil import zmp, kinematics, filter
 from dynfil.commands import main
 from dynfil.filter import update_derivs
 from dynfil.kinematics import interpolate_savgol
