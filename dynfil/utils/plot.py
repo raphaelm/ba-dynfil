@@ -372,22 +372,14 @@ def plot_comparison(residuums, filenames=tuple(), x='residuum'):
 
     fig.tight_layout()
 
-    def latex_float(f):
-        float_str = "{0:.2g}".format(f)
-        if "e" in float_str:
-            base, exponent = float_str.split("e")
-            return r"{0} \times 10^{{{1}}}".format(base, int(exponent))
-        else:
-            return float_str
-
     for filename in filenames:
         if filename.endswith('.tex'):
             # Output table
-            tex = r'\begin{tabular}{l||S|S|S|S|S}' + '\n'
+            tex = r'\begin{tabular}{l||S[table-format=+1.2e+2]|S[table-format=+1.2e+2]|S[table-format=+1.2e+2]|S[table-format=+1.2e+2]|S[table-format=+1.2e+2]}' + '\n'
             tex += r'{Filter method} & {Mean %s} & {Std. dev.} & {Min.} & {Max.} & {Median}\\' % x
             tex += '\n' + r'\midrule' + '\n'
             for k, v in reversed(residuums.items()):
-                tex += '{k} & {mean:.4g} & {sd:.4g} & {min:.4g} & {max:.4g} & {med:.4g}'.format(
+                tex += '{k} & {mean:.2e} & {sd:.2e} & {min:.2e} & {max:.2e} & {med:.2e}'.format(
                     k=k,
                     mean=np.mean(v),
                     sd=np.std(v),

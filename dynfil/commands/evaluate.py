@@ -151,8 +151,10 @@ def gen_confstr(filter_method, i, interpolate, previewwindow):
 
 
 @main.main.command()
+@click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
+              help='IK method', default='analytical')
 @click.pass_context
-def evaluate(ctx):
+def evaluate(ctx, ik_method):
     model = ctx.obj['model']
     chest = ctx.obj['chest']
     lsole = ctx.obj['lsole']
@@ -169,7 +171,7 @@ def evaluate(ctx):
     # First ZMP calculation
     with status('Calculate ZMP from forward run'):
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
-            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method='analytical'
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
         )
 
         com_calc = kinematics.com_trajectory(model, chest, q_calc)
@@ -207,7 +209,7 @@ def evaluate(ctx):
                     with status('{} - Apply dynamic filter'.format(confstr)):
                         chest_next = filter.filters[filter_method](
                             chest=chest_next, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
-                            model=model, times=timesteps, ik_method='analytical', previewwindow=previewwindow
+                            model=model, times=timesteps, ik_method=ik_method, previewwindow=previewwindow
                         )
 
                         chest_filtered = chest_next.copy()
@@ -219,7 +221,7 @@ def evaluate(ctx):
                     with status('{} - Calculate ZMP from filtered data after'.format(confstr)):
                         q_filtered, qdot_filtered, qddot_filtered = kinematics.inverse_with_derivatives(
                             model, q_ini, chest_filtered, lsole, rsole, timesteps, interpolate='savgol',
-                            method='analytical'
+                            method=ik_method
                         )
                         zmp_filtered = zmp.calculate_zmp_trajectory(model, q_filtered, qdot_filtered, qddot_filtered,
                                                                     chest_filtered)
