@@ -112,6 +112,7 @@ def box_plots(resdata, jerkdata, cdddata, out_dir, fname):
         filenames=[
             os.path.join(out_dir, 'res_{}.pdf'.format(fname)),
             os.path.join(out_dir, 'res_{}.pgf'.format(fname)),
+            os.path.join(out_dir, 'res_{}.tex'.format(fname)),
         ]
     )
     plot.plot_comparison(
@@ -119,6 +120,7 @@ def box_plots(resdata, jerkdata, cdddata, out_dir, fname):
         filenames=[
             os.path.join(out_dir, 'jerks_{}.pdf'.format(fname)),
             os.path.join(out_dir, 'jerks_{}.pgf'.format(fname)),
+            os.path.join(out_dir, 'jerks_{}.tex'.format(fname)),
         ],
         x=r'jerk [$m s^{-3}$]'
     )
@@ -127,6 +129,7 @@ def box_plots(resdata, jerkdata, cdddata, out_dir, fname):
         filenames=[
             os.path.join(out_dir, 'cdd_{}.pdf'.format(fname)),
             os.path.join(out_dir, 'cdd_{}.pgf'.format(fname)),
+            os.path.join(out_dir, 'cdd_{}.tex'.format(fname)),
         ],
         x=r'$\ddot c$ [$m s^{-2}$]'
     )
