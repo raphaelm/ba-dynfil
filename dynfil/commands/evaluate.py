@@ -3,6 +3,7 @@ from collections import namedtuple, OrderedDict
 
 import click
 import numpy as np
+import time
 
 from dynfil import zmp, kinematics, filter
 from dynfil.commands import main
@@ -18,6 +19,7 @@ CONFIGS = [
     Configuration('gaussnewton', 5, ('none', 'savgol'), (0,)),
     Configuration('pc', 5, ('none',), (0.5, 1, 1.5)),
 ]
+SPEED_RUNS = 25
 
 
 def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zmp_filtered, chest_filtered, out_dir):
@@ -310,3 +312,59 @@ def evaluate(ctx, ik_method):
                             ctx.obj['out_dir'],
                             '{}_{}_{}'.format(filter_method, interpolate, pwindow)
                         )
+
+
+@main.main.command()
+@click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
+              help='IK method', default='analytical')
+@click.pass_context
+def evaluate_speed(ctx, ik_method):
+    model = ctx.obj['model']
+    chest = ctx.obj['chest']
+    lsole = ctx.obj['lsole']
+    rsole = ctx.obj['rsole']
+    timesteps = ctx.obj['timesteps']
+    zmp_ref = ctx.obj['zmp_ref']
+
+    speed = OrderedDict()
+
+    q_ini = model.initial_pose_walking
+
+    # First ZMP calculation
+    with status('Calculate ZMP from forward run'):
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
+        )
+
+        com_calc = kinematics.com_trajectory(model, chest, q_calc)
+        zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
+
+    for filter_method, iterations, interpolations, previewwindows in CONFIGS:
+        for interpolate in interpolations:
+            for previewwindow in previewwindows:
+
+                speeds = []
+                confstr = gen_confstr(filter_method, 1, interpolate, previewwindow)
+                for i in range(SPEED_RUNS):
+                    with status('{} - Apply dynamic filter - Run {}'.format(confstr, i)):
+                        chest_next = chest.copy()
+                        t0 = time.time()
+                        chest_next = filter.filters[filter_method](
+                            chest=chest_next, lsole=lsole, rsole=rsole, zmp_ref=zmp_ref, q_ini=q_ini,
+                            model=model, times=timesteps, ik_method=ik_method, previewwindow=previewwindow
+                        )
+                        if interpolate == 'savgol':
+                            interpolate_savgol(chest_next.traj_pos)
+                        update_derivs(chest_next, timesteps)
+                        speeds.append(time.time() - t0)
+
+                speed[confstr] = np.array(speeds)
+
+    with status('Generate boxplots'):
+        plot.plot_speed(
+            OrderedDict(reversed(speed.items())),
+            filenames=[
+                os.path.join(ctx.obj['out_dir'], 'speed_comparison.pdf'),
+                os.path.join(ctx.obj['out_dir'], 'speed_comparison.pgf'),
+            ]
+        )

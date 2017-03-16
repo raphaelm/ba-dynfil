@@ -396,5 +396,28 @@ def plot_comparison(residuums, filenames=tuple(), x='residuum'):
             fig.savefig(filename, dpi=DPI)
 
 
+def plot_speed(results, filenames=tuple(), x='time [$s$]'):
+    fig = plt.figure(figsize=cm2inch(18, 3.5 + 0.49 * len(results)))
+    ax = fig.gca()
+
+    ypos = np.arange(len(results))
+    ax.barh(
+        ypos,
+        [np.mean(v) for v in results.values()],
+        xerr=[np.std(v) for v in results.values()],
+        align='center',
+        color='#FF8C1F',
+        ecolor='black'
+    )
+    ax.set_xlabel(x)
+    ax.set_yticks(ypos)
+    ax.set_yticklabels(results.keys())
+
+    fig.tight_layout()
+
+    for filename in filenames:
+        fig.savefig(filename, dpi=DPI)
+
+
 def show_all():
     plt.show()
