@@ -318,6 +318,63 @@ def evaluate(ctx, ik_method):
 @click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
               help='IK method', default='analytical')
 @click.pass_context
+def evaluate_zmp_accuracy(ctx, ik_method):
+    model = ctx.obj['model']
+    chest = ctx.obj['chest']
+    lsole = ctx.obj['lsole']
+    rsole = ctx.obj['rsole']
+    timesteps = ctx.obj['timesteps']
+    zmp_ref = ctx.obj['zmp_ref']
+
+    q_ini = model.initial_pose_walking
+
+    # First ZMP calculation
+    with status('Calculate IK'):
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
+        )
+
+    with status('Calculate approximated trajectory'):
+        zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
+
+    with status('Calculate real trajectory'):
+        zmp_calc_real = zmp.calculate_real_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest, lsole, rsole)
+
+    with status('Generate plots'):
+        plot.plot_trajectories_1d_axis_combined(
+            timesteps,
+            trajectories=[
+                plot.PlotTrajectory(positions=zmp_calc[:, 0:2], rotations=None, label='ZMP with contact forces',
+                                    color='b', linestyle=(0, (1, 1))),
+                plot.PlotTrajectory(positions=zmp_calc_real[:, 0:2], rotations=None, label='ZMP with inverse dynamics',
+                                    color='r', linestyle=(0, (5, 1))),
+            ],
+            filenames=[
+                os.path.join(ctx.obj['out_dir'], 'zmp_accuracy.pdf'),
+                os.path.join(ctx.obj['out_dir'], 'zmp_accuracy.pgf'),
+            ]
+        )
+
+        """
+        plot.plot_residuums(
+            data=[
+                plot.PlotResiduum(times=timesteps, values=zmp_calc - zmp_calc_real, color='b'),
+            ],
+            filenames=[
+                os.path.join(ctx.obj['out_dir'], 'zmp_accuracy_res.pdf'),
+                os.path.join(ctx.obj['out_dir'], 'zmp_accuracy_res.pgf'),
+            ]
+        )
+        """
+
+    if ctx.obj['show']:
+        plot.show_all()
+
+
+@main.main.command()
+@click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
+              help='IK method', default='analytical')
+@click.pass_context
 def evaluate_speed(ctx, ik_method):
     model = ctx.obj['model']
     chest = ctx.obj['chest']

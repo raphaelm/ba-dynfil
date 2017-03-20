@@ -84,6 +84,12 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
                        header=model.meshup_header)
         save_to_meshup(os.path.join(ctx.obj['out_dir'], 'inverse_after_filter.csv'), timesteps, q_filtered,
                        header=model.meshup_header)
+        np.savetxt(os.path.join(ctx.obj['out_dir'], 'q.csv'),
+                   q_calc, fmt="%.18f", delimiter=", ", newline="\n", comments="")
+        np.savetxt(os.path.join(ctx.obj['out_dir'], 'qdot.csv'),
+                   qdot_calc, fmt="%.18f", delimiter=", ", newline="\n", comments="")
+        np.savetxt(os.path.join(ctx.obj['out_dir'], 'qddot.csv'),
+                   qddot_calc, fmt="%.18f", delimiter=", ", newline="\n", comments="")
 
     # Generate plots
     with status('Generate plots'):
