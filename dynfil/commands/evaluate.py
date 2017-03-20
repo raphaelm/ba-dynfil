@@ -425,3 +425,45 @@ def evaluate_speed(ctx, ik_method):
                 os.path.join(ctx.obj['out_dir'], 'speed_comparison.pgf'),
             ]
         )
+
+
+@main.main.command()
+@click.option('--ik-method', type=click.Choice(['numerical', 'analytical']),
+              help='IK method', default='analytical')
+@click.pass_context
+def plot_error(ctx, ik_method):
+    model = ctx.obj['model']
+    chest = ctx.obj['chest']
+    lsole = ctx.obj['lsole']
+    rsole = ctx.obj['rsole']
+    timesteps = ctx.obj['timesteps']
+    zmp_ref = ctx.obj['zmp_ref']
+
+    q_ini = model.initial_pose_walking
+
+    # First ZMP calculation
+    with status('Calculate IK'):
+        q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
+            model, q_ini, chest, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
+        )
+
+    with status('Calculate real trajectory'):
+        zmp_calc = zmp.calculate_real_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest, lsole, rsole)
+
+    with status('Generate plots'):
+        plot.plot_trajectories_1d_axis_combined(
+            timesteps,
+            trajectories=[
+                plot.PlotTrajectory(positions=zmp_calc[:, 0:2], rotations=None, label='ZMP unfiltered', color='c',
+                                    linestyle=(0, (1, 1))),
+                plot.PlotTrajectory(positions=zmp_ref[:, 0:2], rotations=None, label='ZMP reference', color='m',
+                                    linestyle=(0, (5, 1))),
+            ],
+            filenames=[
+                os.path.join(ctx.obj['out_dir'], 'zmp_unfiltered.pdf'),
+                os.path.join(ctx.obj['out_dir'], 'zmp_unfiltered.pgf'),
+            ]
+        )
+
+    if ctx.obj['show']:
+        plot.show_all()
