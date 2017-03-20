@@ -28,8 +28,8 @@ def zmp_jacobians(model, zmp_ini, chest, lsole, rsole, q_ini, times, ik_method):
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
             model, q_ini, chest_modified, lsole, rsole, times, method=ik_method
         )
-        zmp_calc_second = zmp.calculate_zmp_trajectory(
-            model, q_calc, qdot_calc, qddot_calc, chest_modified
+        zmp_calc_second = zmp.calculate_real_zmp_trajectory(
+            model, q_calc, qdot_calc, qddot_calc, chest_modified, lsole, rsole
         )[:, 0:2]
 
         jacobians[:, :, dim] = (zmp_calc_second - zmp_ini) / h
@@ -54,8 +54,8 @@ def dynfil_newton_numerical(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
         model, q_ini, chest, lsole, rsole, times, method=ik_method
     )
-    zmp_calc = zmp.calculate_zmp_trajectory(
-        model, q_calc, qdot_calc, qddot_calc, chest
+    zmp_calc = zmp.calculate_real_zmp_trajectory(
+        model, q_calc, qdot_calc, qddot_calc, chest, lsole, rsole
     )
     zmp_diff = zmp_calc - zmp_ref
 
@@ -77,8 +77,8 @@ def dynfil_least_squares(chest, lsole, rsole, zmp_ref, q_ini, model, times, ik_m
         q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
             model, q_ini, chest_new, lsole, rsole, times, method=ik_method
         )
-        zmp_calc_new = zmp.calculate_zmp_trajectory(
-            model, q_calc, qdot_calc, qddot_calc, chest_new
+        zmp_calc_new = zmp.calculate_real_zmp_trajectory(
+            model, q_calc, qdot_calc, qddot_calc, chest_new, lsole, rsole
         )
         zmp_diff = zmp_calc_new - zmp_ref
         com_diff = np.vstack((np.diff(chest_new.traj_pos, axis=0), np.array([[0, 0, 0]])))
@@ -127,8 +127,8 @@ def dynfil_gradient_descent(chest, lsole, rsole, zmp_ref, q_ini, model, times, i
     q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
         model, q_ini, chest, lsole, rsole, times
     )
-    zmp_calc = zmp.calculate_zmp_trajectory(
-        model, q_calc, qdot_calc, qddot_calc, chest
+    zmp_calc = zmp.calculate_real_zmp_trajectory(
+        model, q_calc, qdot_calc, qddot_calc, chest, lsole, rsole
     )
     zmp_diff = zmp_calc - zmp_ref
 
@@ -174,8 +174,8 @@ def dynfil_preview_control(chest, lsole, rsole, zmp_ref, q_ini, model, times,
     q_calc, qdot_calc, qddot_calc = kinematics.inverse_with_derivatives(
         model, q_ini, chest, lsole, rsole, times, method=ik_method
     )
-    zmp_calc = zmp.calculate_zmp_trajectory(
-        model, q_calc, qdot_calc, qddot_calc, chest
+    zmp_calc = zmp.calculate_real_zmp_trajectory(
+        model, q_calc, qdot_calc, qddot_calc, chest, lsole, rsole
     )
     zmp_diff = zmp_calc - zmp_ref
 

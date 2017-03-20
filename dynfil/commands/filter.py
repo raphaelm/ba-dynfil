@@ -45,7 +45,7 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
         )
 
         com_calc = kinematics.com_trajectory(model, chest, q_calc)
-        zmp_calc = zmp.calculate_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest)
+        zmp_calc = zmp.calculate_real_zmp_trajectory(model, q_calc, qdot_calc, qddot_calc, chest, lsole, rsole)
 
     with status('Export inverse kinematics results as files'):
         export_data = np.zeros((q_calc.shape[0], 1 + q_calc.shape[1]))
@@ -76,7 +76,8 @@ def run_filter(ctx, filter_method, interpolate, iterations, ik_method):
         q_filtered, qdot_filtered, qddot_filtered = kinematics.inverse_with_derivatives(
             model, q_ini, chest_filtered, lsole, rsole, timesteps, interpolate='savgol', method=ik_method
         )
-        zmp_filtered = zmp.calculate_zmp_trajectory(model, q_filtered, qdot_filtered, qddot_filtered, chest_filtered)
+        zmp_filtered = zmp.calculate_real_zmp_trajectory(model, q_filtered, qdot_filtered,
+                                                         qddot_filtered, chest_filtered, lsole, rsole)
 
     # Save meshup files
     with status('Export MeshUp files'):

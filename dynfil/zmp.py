@@ -96,7 +96,8 @@ def calculate_real_zmp_trajectory(model, q, qdot, qddot, chest, lsole, rsole):
         net_moment += np.cross(com_tmp, force_gravity)
 
         if cstype in ('left', 'both'):
-            forces = np.split(lmbda[:9], len(points))
+            forces = np.array(np.split(lmbda[:9], len(points)))
+
             for i, point in enumerate(points):
                 point_pos = rbdl.CalcBodyToBaseCoordinates(model.model, q[t], bid_left, point)
                 net_force += forces[i]
@@ -104,9 +105,10 @@ def calculate_real_zmp_trajectory(model, q, qdot, qddot, chest, lsole, rsole):
 
         if cstype in ('right', 'both'):
             if cstype == 'both':
-                forces = np.split(lmbda[9:], len(points))
+                forces = np.array(np.split(lmbda[9:], len(points)))
             else:
-                forces = np.split(lmbda, len(points))
+                forces = np.array(np.split(lmbda, len(points)))
+
             for i, point in enumerate(points):
                 point_pos = rbdl.CalcBodyToBaseCoordinates(model.model, q[t], bid_right, point)
                 net_force += forces[i]

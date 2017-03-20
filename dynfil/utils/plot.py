@@ -362,6 +362,9 @@ def plot_comparison(residuums, filenames=tuple(), x='residuum'):
     ax = fig.gca()
     ax.set_xscale('log')
 
+    if np.min(residuums.values()) < 1e-9:
+        ax.set_ylim(10e-9, 1)
+
     ax.boxplot(
         residuums.values(),
         vert=False,

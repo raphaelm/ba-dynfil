@@ -34,7 +34,7 @@ def fd_helper(dot_ndirs, func, *argpairs):
 
 
 def ik_one_leg(D, A, B, root_r, root_E, foot_r, foot_E, root_dot, foot_dot, debug=False):
-    if root_dot is not None and np.any(root_dot):
+    if root_dot is not None:
         dot_ndirs = root_dot.shape[-1]
     else:
         dot_ndirs = None
