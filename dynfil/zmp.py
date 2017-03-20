@@ -82,13 +82,18 @@ def calculate_real_zmp_trajectory(model, q, qdot, qddot, chest, lsole, rsole):
             cs = cs_right
             cstype = 'right'
 
-        rbdl.ForwardDynamicsForwardDynamicsConstraintsDirect(model.model, q[t], qdot[t], tau, cs, qddot[t])
+        com_tmp = np.zeros(3)
+        mass = rbdl.CalcCenterOfMass(model.model, q[t], np.zeros(model.dof_count), com_tmp)
 
+        rbdl.ForwardDynamicsForwardDynamicsConstraintsDirect(model.model, q[t], qdot[t], tau, cs, qddot[t])
         lmbda = cs.force
 
-        force_gravity = np.zeros(3)  # ???
         net_force = np.zeros(3)
         net_moment = np.zeros(3)
+
+        force_gravity = mass * model.model.gravity
+        net_force += force_gravity
+        net_moment += np.cross(com_tmp, force_gravity)
 
         if cstype in ('left', 'both'):
             forces = np.split(lmbda[:9], len(points))
@@ -114,10 +119,6 @@ def calculate_real_zmp_trajectory(model, q, qdot, qddot, chest, lsole, rsole):
         net_moment = np.cross(com, force_gravity)
 
         _zmp = 1 / (net_force[2]) * np.array([-net_moment[1], net_moment[0], 0])
-
-        zmp_pos = com + _zmp
-        zmp_pos[2] = 0
-
-        zmp[t] = zmp_pos
+        zmp[t] = _zmp
 
     return zmp

@@ -14,4 +14,9 @@ evaluate-heicub:
 evaluate-speed:
 	python main.py --trajectory out/pg.simple/pg_data.txt --model simple --out-dir out/simple/ evaluate_speed --ik-method analytical
 
-all: pg evaluate-simple evaluate-heicub evaluate-speed
+evaluate-accuracy:
+	python main.py --trajectory out/pg.simple/pg_data.txt --model simple --out-dir out/zmpaccuracy.simple/ evaluate_zmp_accuracy
+	python main.py --trajectory out/pg.heicub/pg_data.txt --model heicub --out-dir out/zmpaccuracy.heicub/ evaluate_zmp_accuracy
+	python main.py --trajectory out/pg.simplelx5/pg_data.txt --model simplelx5 --out-dir out/zmpaccuracy.simplelx5/ evaluate_zmp_accuracy
+
+all: pg evaluate-simple evaluate-heicub evaluate-speed evaluate-accuracy
