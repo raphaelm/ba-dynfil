@@ -17,6 +17,7 @@ Thanks to the friendly folks at [ORB](https://orb.uni-hd.de) for helping me make
   https://bitbucket.org/mkudruss/rbdl/
 
   If you are on Arch Linux, install the ``lua51`` package and run cmake with the following options:
+
       cmake .. -DRBDL_BUILD_ADDON_LUAMODEL=ON -DRBDL_BUILD_ADDON_URDFREADER=ON \
                -DRBDL_BUILD_PYTHON_WRAPPER=ON -DLUA_INCLUDE_DIR=/usr/include/lua5.1 \
 
@@ -24,7 +25,7 @@ Thanks to the friendly folks at [ORB](https://orb.uni-hd.de) for helping me make
   versions will be automatically correct.
 
 * Set your PYTHONPATH such that it includes the build/python/ directory from RBDL, e.g.
-  export PYTHONPATH=../rbdl/build/python:$PYTHONPATH
+  ``export PYTHONPATH=../rbdl/build/python:$PYTHONPATH``
 
 ## Usage
 
