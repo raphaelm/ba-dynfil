@@ -301,9 +301,9 @@ def plot_res_histo(data, filenames=tuple(), title=None, with_pie=False):
         a = axes[i] if len(data) > 1 else axes
         if isinstance(row, PlotResiduum):
             normed_data = (row.values * row.values).sum(axis=1) ** 0.5
-            a.hist(normed_data, label=row.label, color=row.color, bins=np.arange(0, 0.12, 0.01))
+            a.hist(normed_data, label=row.label, color=row.color, bins=np.arange(0, 0.06, 0.005))
             a.set_xlabel('residuum')
-            a.set_yticks(np.arange(0, 0.012, 0.04))
+            a.set_yticks(np.arange(0, 0.06, 0.02))
 
     a = axes[0] if len(data) > 1 else axes
     a.set_ylabel('timesteps')
@@ -327,9 +327,9 @@ def plot_residuums(data, filenames=tuple(), title=None, with_pie=False):
             if row.label:
                 axes[i, 0].set_title(row.label)
 
-            axes[i, 1].hist(normed_data, label=row.label, color=row.color, bins=np.arange(0, 0.12, 0.01))
+            axes[i, 1].hist(normed_data, label=row.label, color=row.color, bins=np.arange(0, 0.06, 0.005))
             axes[i, 1].set_ylabel('timesteps')
-            axes[i, 1].set_yticks(np.arange(0, 0.012, 0.04))
+            axes[i, 1].set_yticks(np.arange(0, 0.06, 0.02))
 
             if prev_normed_data is not None and with_pie:
                 improved_cnt = np.sum(np.less(normed_data, prev_normed_data))
