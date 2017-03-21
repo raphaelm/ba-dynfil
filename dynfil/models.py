@@ -107,20 +107,20 @@ class SimpleModel(RobotModel):
     ])
     meshup_header = meshup.MESHUP_HEADER_SIMPLE
     step_length = 0.2
-    foot_distance = 0.25 * 2
-    com_height = 0.60
+    foot_distance = 0.2
+    com_height = 0.40
 
 
 class SimpleModelLX2(SimpleModel):
     model_file = "data/models/simple_model_legsx2.lua"
-    com_height = 0.625
+    com_height = 0.425
 
 
 class SimpleModelLX5(SimpleModel):
     model_file = "data/models/simple_model_legsx5.lua"
-    com_height = 0.65
+    com_height = 0.45
 
 
 class SimpleModelLX10(SimpleModel):
     model_file = "data/models/simple_model_legsx10.lua"
-    com_height = 0.70
+    com_height = 0.50

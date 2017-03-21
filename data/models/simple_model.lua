@@ -1,6 +1,8 @@
 --[[
-    Implementation of a 3 DoF SCARA arm to test inverse kinematics algorithms.
-    Author: Manuel Kudruss <manuel.kudruss@iwr.uni-heidelberg.de>
+    Implementation of a simple biped robot model.
+
+    Authors: Manuel Kudruss <manuel.kudruss@iwr.uni-heidelberg.de>
+             Raphael Michel <mail@raphaelmichel.de>
 --]]
 
 -- define some convenience functions
@@ -47,28 +49,29 @@ end
 
 -- define some constants
 
+factor = 1
 constants = {
-    hip_w = 0.5,
+    hip_w = 0.2,
 
     pelvis_m = 20,
     pelvis_l = 0.2,
-    pelvis_w = 0.9*0.5,
+    pelvis_w = 0.15,
     pelvis_h = 0.2,
 
-    thigh_m = 0.4,
-    thigh_l = 0.2,
-    thigh_w = 0.2,
-    thigh_h = 0.4,
+    thigh_m = 0.4 * factor,
+    thigh_l = 0.1,
+    thigh_w = 0.1,
+    thigh_h = 0.27,
 
-    shank_m = 0.3,
-    shank_l = 0.2,
-    shank_w = 0.2,
-    shank_h = 0.3,
+    shank_m = 0.3 * factor,
+    shank_l = 0.1,
+    shank_w = 0.1,
+    shank_h = 0.27,
 
-    foot_m = 0.1,
-    foot_l = 0.3,
-    foot_w = 0.2,
-    foot_h = 0.1,
+    foot_m = 0.1 * factor,
+    foot_l = 0.21,
+    foot_w = 0.13,
+    foot_h = 0.05,
 }
 
 -- define bodies
