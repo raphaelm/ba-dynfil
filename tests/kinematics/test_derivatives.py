@@ -54,7 +54,7 @@ def minimal_trajectory(model):
 
 def test_one_leg_consistency_first_order_derivative(model):
     chest, rsole, chest_dot, rsole_dot = minimal_trajectory(model)
-    D, A, B, com_correction = ik_constants(model, model.initial_pose_walking, chest)
+    D, A, B, com_correction, __ = ik_constants(model, model.initial_pose_walking, chest)
     q_fd, qdot_fd, __ = ik_one_leg_fd(
         D, A, B,
         chest.traj_pos[0], chest.traj_ort[0],
