@@ -40,6 +40,7 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
         filenames=[
             os.path.join(out_dir, 'trajectories_on_ground_with_filtered.pdf'),
             os.path.join(out_dir, 'trajectories_on_ground_with_filtered.pgf'),
+            os.path.join(out_dir, 'trajectories_on_ground_with_filtered.svg'),
         ]
     )
 
@@ -54,6 +55,7 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
         filenames=[
             os.path.join(out_dir, 'trajectories_waist_with_filtered.pgf'),
             os.path.join(out_dir, 'trajectories_waist_with_filtered.pdf'),
+            os.path.join(out_dir, 'trajectories_waist_with_filtered.svg'),
         ]
     )
 
@@ -69,6 +71,7 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
         filenames=[
             os.path.join(out_dir, 'zmp_filtered.pdf'),
             os.path.join(out_dir, 'zmp_filtered.pgf'),
+            os.path.join(out_dir, 'zmp_filtered.svg'),
         ]
     )
 
@@ -83,6 +86,7 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
         filenames=[
             os.path.join(out_dir, 'zmp_components.pdf'),
             os.path.join(out_dir, 'zmp_components.pgf'),
+            os.path.join(out_dir, 'zmp_components.svg'),
         ]
     )
 
@@ -94,6 +98,7 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
         filenames=[
             os.path.join(out_dir, 'residuums.pdf'),
             os.path.join(out_dir, 'residuums.pgf'),
+            os.path.join(out_dir, 'residuums.svg'),
         ]
     )
 
@@ -104,6 +109,7 @@ def thesis_plots(timesteps, lsole, rsole, chest, com_calc, zmp_ref, zmp_calc, zm
         filenames=[
             os.path.join(out_dir, 'residuum_histo.pdf'),
             os.path.join(out_dir, 'residuum_histo.pgf'),
+            os.path.join(out_dir, 'residuum_histo.svg'),
         ]
     )
 
@@ -114,6 +120,7 @@ def box_plots(resdata, jerkdata, cdddata, out_dir, fname):
         filenames=[
             os.path.join(out_dir, 'res_{}.pdf'.format(fname)),
             os.path.join(out_dir, 'res_{}.pgf'.format(fname)),
+            os.path.join(out_dir, 'res_{}.svg'.format(fname)),
             os.path.join(out_dir, 'res_{}.tex'.format(fname)),
         ]
     )
@@ -122,6 +129,7 @@ def box_plots(resdata, jerkdata, cdddata, out_dir, fname):
         filenames=[
             os.path.join(out_dir, 'jerks_{}.pdf'.format(fname)),
             os.path.join(out_dir, 'jerks_{}.pgf'.format(fname)),
+            os.path.join(out_dir, 'jerks_{}.svg'.format(fname)),
             os.path.join(out_dir, 'jerks_{}.tex'.format(fname)),
         ],
         x=r'jerk [$m s^{-3}$]'
@@ -131,6 +139,7 @@ def box_plots(resdata, jerkdata, cdddata, out_dir, fname):
         filenames=[
             os.path.join(out_dir, 'cdd_{}.pdf'.format(fname)),
             os.path.join(out_dir, 'cdd_{}.pgf'.format(fname)),
+            os.path.join(out_dir, 'cdd_{}.svg'.format(fname)),
             os.path.join(out_dir, 'cdd_{}.tex'.format(fname)),
         ],
         x=r'$\ddot c$ [$m s^{-2}$]'
@@ -352,6 +361,7 @@ def evaluate_zmp_accuracy(ctx, ik_method):
             filenames=[
                 os.path.join(ctx.obj['out_dir'], 'zmp_accuracy.pdf'),
                 os.path.join(ctx.obj['out_dir'], 'zmp_accuracy.pgf'),
+                os.path.join(ctx.obj['out_dir'], 'zmp_accuracy.svg'),
             ]
         )
 
@@ -363,6 +373,7 @@ def evaluate_zmp_accuracy(ctx, ik_method):
             filenames=[
                 os.path.join(ctx.obj['out_dir'], 'zmp_accuracy_res.pdf'),
                 os.path.join(ctx.obj['out_dir'], 'zmp_accuracy_res.pgf'),
+                os.path.join(ctx.obj['out_dir'], 'zmp_accuracy_res.svg'),
             ]
         )
         """
@@ -423,6 +434,7 @@ def evaluate_speed(ctx, ik_method):
             filenames=[
                 os.path.join(ctx.obj['out_dir'], 'speed_comparison.pdf'),
                 os.path.join(ctx.obj['out_dir'], 'speed_comparison.pgf'),
+                os.path.join(ctx.obj['out_dir'], 'speed_comparison.svg'),
             ]
         )
 
@@ -462,6 +474,7 @@ def plot_error(ctx, ik_method):
             filenames=[
                 os.path.join(ctx.obj['out_dir'], 'zmp_unfiltered.pdf'),
                 os.path.join(ctx.obj['out_dir'], 'zmp_unfiltered.pgf'),
+                os.path.join(ctx.obj['out_dir'], 'zmp_unfiltered.svg'),
             ]
         )
 
