@@ -259,7 +259,9 @@ def main(model, out_dir):
         trajectories=[
             plot.PlotTrajectory(positions=zmp[:, 0:2], rotations=None, label=None, color='k'),
         ],
-        filenames=[os.path.join(out_dir, 'pg_zmp_over_time.pgf')],
+        filenames=[
+            os.path.join(out_dir, 'pg_zmp_over_time.pgf'),
+        ],
         #title='Planned ZMP trajectory'
     )
 
@@ -269,7 +271,9 @@ def main(model, out_dir):
             plot.PlotTrajectory(positions=zmp[:, 0:2], rotations=None, label='ZMP', color='k', linestyle='dotted'),
             plot.PlotTrajectory(positions=com[:, 0:2], rotations=None, label='CoM', color='k'),
         ],
-        filenames=[os.path.join(out_dir, 'pg_zmp_com_over_time.pgf')],
+        filenames=[
+            os.path.join(out_dir, 'pg_zmp_com_over_time.pgf'),
+        ],
         #title='Planned ZMP trajectory'
     )
 
@@ -281,7 +285,9 @@ def main(model, out_dir):
             plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
             plot.PlotTrajectory(positions=com, rotations=None, label='CoM', color='b'),
         ],
-        filenames=[os.path.join(out_dir, 'pg_trajectories_over_time.pgf')],
+        filenames=[
+            os.path.join(out_dir, 'pg_trajectories_over_time.pgf')
+        ],
         title='Raw trajectories'
     )
 
@@ -292,7 +298,9 @@ def main(model, out_dir):
             plot.PlotTrajectory(positions=drfoot, rotations=None, label='right foot dot', color='g'),
             plot.PlotTrajectory(positions=com_dot, rotations=None, label='CoM dot', color='b'),
         ],
-        filenames=[os.path.join(out_dir, 'pg_derivs.pgf')],
+        filenames=[
+            os.path.join(out_dir, 'pg_derivs.pgf'),
+        ],
         title='Derivatives'
     )
 
@@ -303,7 +311,9 @@ def main(model, out_dir):
             plot.PlotTrajectory(positions=ddrfoot, rotations=None, label='right foot ddot', color='g'),
             plot.PlotTrajectory(positions=com_ddot, rotations=None, label='CoM ddot', color='b'),
         ],
-        filenames=[os.path.join(out_dir, 'pg_derivs_ddot.pgf')],
+        filenames=[
+            os.path.join(out_dir, 'pg_derivs_ddot.pgf')
+        ],
         title='Second Derivatives'
     )
 
@@ -313,7 +323,9 @@ def main(model, out_dir):
             plot.PlotTrajectory(positions=rfoot, rotations=None, label='Right foot', color='g'),
             plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
         ],
-        filename=os.path.join(out_dir, 'pg_trajectories_3d_input.pgf'),
+        filenames=[
+            os.path.join(out_dir, 'pg_trajectories_3d_input.pgf')
+        ],
         title='Input trajectories'
     )
 
@@ -324,7 +336,9 @@ def main(model, out_dir):
             plot.PlotTrajectory(positions=zmp, rotations=None, label='ZMP', color='k'),
             plot.PlotTrajectory(positions=com, rotations=None, label='CoM', color='b'),
         ],
-        filename=os.path.join(out_dir, 'pg_trajectories_3d.pgf'),
+        filenames=[
+            os.path.join(out_dir, 'pg_trajectories_3d.pgf')
+        ],
         title='Trajectories'
     )
 
@@ -336,7 +350,9 @@ def main(model, out_dir):
             plot.FootTrajectory(positions=lfoot, rotations=None, color='r'),
             plot.FootTrajectory(positions=rfoot, rotations=None, color='g'),
         ],
-        filenames=[os.path.join(out_dir, 'pg_trajectories_ground_input.pgf')],
+        filenames=[
+            os.path.join(out_dir, 'pg_trajectories_ground_input.pgf')
+        ],
         #title='2D Trajectories on the ground'
     )
 

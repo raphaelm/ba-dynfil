@@ -37,7 +37,7 @@ def cm2inch(*tupl):
         return tuple(i/inch for i in tupl)
 
 
-def plot_trajectories(trajectories, filename=None, title=None):
+def plot_trajectories(trajectories, filenames=tuple(), title=None):
     mpl.rcParams['legend.fontsize'] = 10
 
     fig = plt.figure(figsize=(11.69, 8.27))
@@ -95,7 +95,7 @@ def plot_trajectories(trajectories, filename=None, title=None):
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
@@ -139,7 +139,7 @@ def plot_trajectories_from_top(trajectories, filenames=tuple(), title=None):
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_trajectories_1d(times, trajectories, filename=None, title=None):
+def plot_trajectories_1d(times, trajectories, filenames=tuple(), title=None):
     fig = plt.figure(figsize=(11.69, 8.27))
     ax = fig.gca()
     if title:
@@ -153,7 +153,7 @@ def plot_trajectories_1d(times, trajectories, filename=None, title=None):
         legobj.set_linewidth(5.0)
     ax.set_xlabel('t')
     ax.set_ylabel('y')
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
@@ -209,7 +209,7 @@ def plot_trajectories_1d_axis(times, trajectories, filenames=tuple(), title=None
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_q_values(times, q, labels, filename=None, title=None):
+def plot_q_values(times, q, labels, filenames=tuple(), title=None):
     if not isinstance(q, tuple):
         q = (q,)
     nplots = len(q[0][0])
@@ -234,11 +234,11 @@ def plot_q_values(times, q, labels, filename=None, title=None):
     axes[-1, 2].set_xlabel('time')
     axes[-1, 3].set_xlabel('time')
 
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_q_derivs(times, q, qdot, qddot, labels, filename=None, limit=None, title=None):
+def plot_q_derivs(times, q, qdot, qddot, labels, filenames=tuple(), limit=None, title=None):
     if not isinstance(q, tuple):
         q = (q,)
     nplots = len(q[0][0])
@@ -267,11 +267,11 @@ def plot_q_derivs(times, q, qdot, qddot, labels, filename=None, limit=None, titl
     axes[-1, 2].set_xlabel('time')
 
     fig.tight_layout()
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
-def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=None, limit=5, title=None):
+def plot_q_interpolation(times, data_without, data_with, name='qddot', filenames=tuple(), limit=5, title=None):
     nplots = len(data_with[0])
     if limit:
         nplots = min(limit, nplots)
@@ -288,7 +288,7 @@ def plot_q_interpolation(times, data_without, data_with, name='qddot', filename=
     axes[-1, 0].set_xlabel('time')
     axes[-1, 1].set_xlabel('time')
 
-    if filename:
+    for filename in filenames:
         fig.savefig(filename, dpi=DPI)
 
 
