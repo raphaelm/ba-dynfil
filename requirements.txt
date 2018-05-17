@@ -3,3 +3,4 @@ matplotlib
 cython
 click
 pytest
+scipy
